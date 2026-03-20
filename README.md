@@ -266,4 +266,4 @@ https://drive.google.com/file/d/11_6QZlPkTYYbGQ3o38s3T2ROJOUkrxny/view?usp=drive
 
 Prototype Link
 
-https://www.figma.com/make/wx7W3u2vPDwgngmDEwt0is/Gig-Worker-Insurance-Platform?t=8nBEkBRVi3nGNyeN-1&preview-route=%2Fadmin%2Fdisruptions
+https://www.figma.com/make/wx7W3u2vPDwgngmDEwt0is/Gig-Worker-Insurance-Platform?p=f&t=pZPA1h633tMohcZ1-0
