@@ -263,3 +263,7 @@ To build a resilient, intelligent insurance system that protects gig workers fro
 📽️ Demo Video
 
 https://drive.google.com/file/d/11_6QZlPkTYYbGQ3o38s3T2ROJOUkrxny/view?usp=drivesdk
+
+Prototype Video
+
+https://www.figma.com/make/wx7W3u2vPDwgngmDEwt0is/Gig-Worker-Insurance-Platform?t=8nBEkBRVi3nGNyeN-1&preview-route=%2Fadmin%2Fdisruptions
