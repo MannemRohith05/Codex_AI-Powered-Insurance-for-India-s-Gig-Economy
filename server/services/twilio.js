@@ -20,11 +20,14 @@ const sendOTP = async (phone) => {
 
   const client = getClient();
   if (client) {
+    let toPhone = phone;
+    if (toPhone.length === 10 && /^\d+$/.test(toPhone)) toPhone = '+91' + toPhone;
+    
     try {
       await client.messages.create({
         body: `Your GigShield OTP is: ${otp}. Valid for 10 minutes.`,
         from: process.env.TWILIO_PHONE_NUMBER,
-        to: phone,
+        to: toPhone,
       });
       console.log(`[Twilio] OTP sent to ${phone}`);
     } catch (err) {

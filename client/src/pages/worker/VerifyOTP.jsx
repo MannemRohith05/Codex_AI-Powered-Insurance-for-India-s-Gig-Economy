@@ -1,8 +1,11 @@
+/**
+ * VerifyOTP — clean, focused single-action screen.
+ */
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../../utils/api';
-import { Shield, MessageSquare, RefreshCw } from 'lucide-react';
+import { Shield, MessageSquare, RefreshCw, ArrowRight } from 'lucide-react';
 
 const VerifyOTP = () => {
   const location = useLocation();
@@ -30,42 +33,37 @@ const VerifyOTP = () => {
     try {
       await api.post('/worker/resend-otp', { phone });
       toast.success('OTP resent!');
-    } catch (err) {
+    } catch {
       toast.error('Failed to resend OTP');
     } finally { setResending(false); }
   };
 
   return (
-    <div className="login-scene">
-      <div className="login-scene-bg" />
-
-      <div className="login-ambient-light" style={{ width: 350, height: 350, top: '20%', left: '10%', background: 'radial-gradient(circle, rgba(0,217,192,0.12) 0%, transparent 70%)' }} />
-      <div className="login-ambient-light" style={{ width: 280, height: 280, bottom: '15%', right: '10%', background: 'radial-gradient(circle, rgba(255,107,53,0.10) 0%, transparent 70%)' }} />
-
-      <div className="login-card-wrapper" style={{ maxWidth: 380 }}>
-        <div className="text-center mb-8 float-in-1">
-          <div className="shield-3d-wrapper inline-block mb-4">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl"
-              style={{ background: 'linear-gradient(135deg, #00f5dd, #00d9c0)', boxShadow: '0 10px 35px rgba(0,217,192,0.45), 0 0 60px rgba(0,217,192,0.15)' }}>
-              <MessageSquare className="w-8 h-8 text-white" style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.40))' }} />
-            </div>
+    <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)] p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-success-50 border border-success-200 rounded-2xl mb-4">
+            <MessageSquare className="w-7 h-7 text-success-600" />
           </div>
-          <h1 className="hero-title gradient-text-teal" style={{ fontSize: '1.8rem', fontFamily: 'var(--font-display)' }}>
-            Verify Phone
+          <h1 className="text-2xl font-bold text-[var(--color-text-primary)] tracking-tight">
+            Verify your phone
           </h1>
-          <p className="text-sm mt-1" style={{ color: 'rgba(148,163,184,0.60)' }}>
-            OTP sent to <span style={{ color: '#00d9c0', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{phone || 'your phone'}</span>
+          <p className="text-sm text-[var(--color-text-muted)] mt-1.5">
+            We sent a 6-digit code to{' '}
+            <span className="font-semibold text-[var(--color-text-secondary)] font-mono">
+              {phone || 'your phone'}
+            </span>
           </p>
         </div>
 
-        <div className="card tilt-card float-in-2" style={{ padding: '28px' }}>
+        <div className="card p-8">
           <form onSubmit={handleVerify} className="space-y-5">
             <div className="form-group">
-              <label className="label">6-Digit OTP Code</label>
+              <label htmlFor="otp" className="label">6-Digit OTP Code</label>
               <input
-                className="input-field text-center text-2xl tracking-widest"
-                style={{ fontFamily: 'var(--font-mono)', letterSpacing: '0.35em' }}
-                placeholder="• • • • • •"
+                id="otp"
+                className="input-field text-center text-3xl font-mono tracking-[0.5em] py-4"
+                placeholder="······"
                 value={otp}
                 onChange={e => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 maxLength={6}
@@ -74,27 +72,35 @@ const VerifyOTP = () => {
               />
             </div>
 
-            <button type="submit" className="btn-teal w-full py-3 flex items-center justify-center gap-2" disabled={loading}>
-              {loading ? <div className="spinner" style={{ borderTopColor: '#050812' }} /> : <><Shield className="w-4 h-4" />Verify & Continue</>}
+            <button
+              type="submit"
+              className="btn-success w-full py-3 text-base"
+              disabled={loading}
+            >
+              {loading
+                ? <span className="spinner border-white border-t-transparent" />
+                : <><Shield className="w-4 h-4" /><span>Verify & Continue</span><ArrowRight className="w-4 h-4" /></>
+              }
             </button>
           </form>
 
-          <div className="mt-4 p-3 rounded-lg" style={{ background: 'rgba(0,217,192,0.05)', border: '1px solid rgba(0,217,192,0.12)' }}>
-            <p className="text-xs" style={{ color: 'rgba(0,217,192,0.60)' }}>
+          <div className="mt-5 p-3.5 rounded-lg bg-primary-50 border border-primary-100">
+            <p className="text-xs text-primary-700">
               🔧 Dev mode: check server console for OTP, or use{' '}
-              <span style={{ color: '#34d399', fontFamily: 'var(--font-mono)' }}>123456</span> if Twilio is not configured.
+              <code className="font-semibold bg-primary-100 px-1 rounded">123456</code>{' '}
+              if Twilio is not configured.
             </p>
           </div>
 
           <button
             onClick={handleResend}
             disabled={resending}
-            className="w-full mt-4 flex items-center justify-center gap-1.5 text-sm transition-colors"
-            style={{ color: 'rgba(148,163,184,0.45)' }}
-            onMouseEnter={e => e.currentTarget.style.color = '#ff6b35'}
-            onMouseLeave={e => e.currentTarget.style.color = 'rgba(148,163,184,0.45)'}
+            className="btn-ghost w-full mt-4 text-sm"
           >
-            {resending ? <div className="spinner" /> : <><RefreshCw className="w-3.5 h-3.5" />Resend OTP</>}
+            {resending
+              ? <span className="spinner text-[var(--color-text-muted)]" />
+              : <><RefreshCw className="w-3.5 h-3.5" /><span>Resend OTP</span></>
+            }
           </button>
         </div>
       </div>
