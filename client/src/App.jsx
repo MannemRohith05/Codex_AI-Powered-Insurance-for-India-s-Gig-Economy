@@ -33,10 +33,10 @@ import ProtectedRoute from './components/ProtectedRoute';
 const App = () => {
   const { loading } = useAuth();
   if (loading) return (
-    <div className="fixed inset-0 flex items-center justify-center bg-slate-950">
+    <div className="fixed inset-0 flex items-center justify-center bg-[var(--color-background)]">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 border-2 border-slate-700 border-t-indigo-500 rounded-full animate-spin" />
-        <span className="text-slate-400 text-sm">Loading GigShield...</span>
+        <div className="w-10 h-10 rounded-full border-2 border-slate-200 border-t-primary-600 animate-spin" />
+        <span className="text-sm text-[var(--color-text-muted)] font-medium">Loading GigShield...</span>
       </div>
     </div>
   );
@@ -44,8 +44,10 @@ const App = () => {
   return (
     <BrowserRouter>
       <ToastContainer
-        position="top-right" autoClose={4000} hideProgressBar={false}
-        theme="dark" toastClassName="!bg-slate-800 !text-white !border !border-slate-700"
+        position="top-right"
+        autoClose={4000}
+        hideProgressBar={false}
+        theme="light"
       />
       <Routes>
         {/* Root redirect */}

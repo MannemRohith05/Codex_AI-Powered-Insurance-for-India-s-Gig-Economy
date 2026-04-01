@@ -18,11 +18,11 @@ const register = async (req, res) => {
     const existing = await Worker.findOne({ phone });
     if (existing) return res.status(409).json({ error: 'Phone number already registered' });
 
-    // Duplicate device check
-    if (device_id) {
-      const dup = await Worker.findOne({ device_id });
-      if (dup) return res.status(409).json({ error: 'Device already registered to another account' });
-    }
+    // Duplicate device check (disabled for dev)
+    // if (device_id) {
+    //   const dup = await Worker.findOne({ device_id });
+    //   if (dup) return res.status(409).json({ error: 'Device already registered to another account' });
+    // }
 
     const password_hash = await bcrypt.hash(password, 12);
     const worker = await Worker.create({ name, phone, password_hash, platform, city, upi_id, device_id });

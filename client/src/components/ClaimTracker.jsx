@@ -1,9 +1,14 @@
-import { CheckCircle } from 'lucide-react';
+/**
+ * ClaimTracker — step progress indicator.
+ * Pure Tailwind, no inline styles.
+ */
+import { Check, XCircle } from 'lucide-react';
+import { cn } from '../utils/cn';
 
 const STEPS = [
-  { key: 'submitted',  label: 'Submitted' },
-  { key: 'reviewing',  label: 'Reviewing' },
-  { key: 'approved',   label: 'Approved'  },
+  { key: 'submitted', label: 'Submitted' },
+  { key: 'reviewing', label: 'Reviewing' },
+  { key: 'approved',  label: 'Approved'  },
 ];
 
 const STATUS_STEP = {
@@ -20,60 +25,52 @@ const ClaimTracker = ({ status, rejectionReason }) => {
 
   if (isRejected) {
     return (
-      <div
-        className="rounded-lg p-3 text-xs"
-        style={{
-          background: 'rgba(244,63,94,0.08)',
-          border: '1px solid rgba(244,63,94,0.20)',
-        }}
-      >
-        <p className="font-semibold" style={{ color: '#fb7185' }}>❌ Claim Rejected</p>
+      <div className="rounded-lg p-3.5 bg-danger-50 border border-danger-200">
+        <div className="flex items-center gap-2">
+          <XCircle className="w-4 h-4 text-danger-600" />
+          <p className="text-sm font-semibold text-danger-700">Claim Rejected</p>
+        </div>
         {rejectionReason && (
-          <p className="mt-0.5" style={{ color: 'rgba(251,113,133,0.70)' }}>{rejectionReason}</p>
+          <p className="text-xs text-danger-600 mt-1 ml-6">{rejectionReason}</p>
         )}
       </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-0 w-full">
+    <div className="flex items-center w-full">
       {STEPS.map((step, idx) => {
         const done   = idx < currentStep;
         const active = idx === currentStep;
-        const pending = idx > currentStep;
 
         return (
-          <div key={step.key} className="flex items-center" style={{ flex: idx < STEPS.length - 1 ? 1 : 'none' }}>
-            <div className="flex flex-col items-center gap-1 step-pop" style={{ animationDelay: `${idx * 0.08}s` }}>
-              <div
-                className="step-dot"
-                style={
-                  done   ? { background: 'linear-gradient(135deg,#00d9c0,#00a896)', borderColor: '#00d9c0', color: '#050812', width: 24, height: 24, fontSize: 11, boxShadow: '0 0 12px rgba(0,217,192,0.45)' } :
-                  active ? { background: 'linear-gradient(135deg,#ff8c5a,#ff6b35)', borderColor: '#ff6b35', color: '#fff',    width: 24, height: 24, fontSize: 11, boxShadow: '0 0 14px rgba(255,107,53,0.55)' } :
-                           { background: 'rgba(15,23,42,0.80)', borderColor: 'rgba(100,116,139,0.25)', color: 'rgba(100,116,139,0.45)', width: 24, height: 24, fontSize: 11 }
-                }
-              >
-                {done ? <CheckCircle className="w-3 h-3" /> : idx + 1}
+          <div key={step.key} className={cn('flex items-center', idx < STEPS.length - 1 && 'flex-1')}>
+            <div className="flex flex-col items-center gap-1.5">
+              {/* Dot */}
+              <div className={cn(
+                'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all',
+                done   ? 'bg-success-500 border-success-500 text-white'   :
+                active ? 'bg-primary-600 border-primary-600 text-white'   :
+                         'bg-white border-[var(--color-border)] text-[var(--color-text-muted)]'
+              )}>
+                {done ? <Check className="w-3.5 h-3.5" strokeWidth={3} /> : idx + 1}
               </div>
-              <span className="text-xs whitespace-nowrap" style={{
-                color: done ? '#00d9c0' : active ? '#ff8c5a' : 'rgba(100,116,139,0.45)',
-                fontSize: 9, fontWeight: active || done ? 700 : 400,
-              }}>
+              {/* Label */}
+              <span className={cn(
+                'text-[10px] font-semibold whitespace-nowrap',
+                done   ? 'text-success-600' :
+                active ? 'text-primary-600' :
+                         'text-[var(--color-text-muted)]'
+              )}>
                 {step.label}
               </span>
             </div>
+            {/* Connector line */}
             {idx < STEPS.length - 1 && (
-              <div
-                className="step-line"
-                style={{
-                  background: done
-                    ? 'linear-gradient(90deg, #00d9c0, #ff6b35)'
-                    : 'rgba(100,116,139,0.18)',
-                  height: 2,
-                  flex: 1,
-                  marginBottom: 16,
-                }}
-              />
+              <div className={cn(
+                'h-0.5 flex-1 mb-5 mx-1 transition-colors',
+                done ? 'bg-success-400' : 'bg-[var(--color-border)]'
+              )} />
             )}
           </div>
         );
