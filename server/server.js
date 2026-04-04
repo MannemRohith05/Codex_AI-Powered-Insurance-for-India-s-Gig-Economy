@@ -17,8 +17,9 @@ const platformRoutes = require('./routes/platform');
 const app = express();
 
 // Security & parsing
-app.use(helmet({ crossOriginResourcePolicy: false }));
+// app.use(helmet({ crossOriginResourcePolicy: false })); // disabled to prevent preflight blocks
 app.use(cors());
+app.options('*', cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 if (process.env.NODE_ENV !== 'test') app.use(morgan('dev'));
