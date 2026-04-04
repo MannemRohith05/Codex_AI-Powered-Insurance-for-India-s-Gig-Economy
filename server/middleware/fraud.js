@@ -1,4 +1,3 @@
-const turf = require('@turf/turf');
 const Worker = require('../models/Worker');
 const ActivityLog = require('../models/ActivityLog');
 const FraudLog = require('../models/FraudLog');
@@ -23,6 +22,8 @@ const fraudEngine = async (req, res, next) => {
       const { lat, lng } = gps_at_claim;
       const zone = worker.work_zone_geojson;
       let isInside = false;
+      const turfModule = await import('@turf/turf');
+      const turf = turfModule.default || turfModule;
       try {
         const point = turf.point([lng, lat]);
         const polygon = turf.feature(zone);
