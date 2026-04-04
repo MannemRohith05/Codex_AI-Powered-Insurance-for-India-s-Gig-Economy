@@ -4,7 +4,7 @@ const { requireWorker } = require('../middleware/auth');
 const { authLimiter, otpLimiter } = require('../middleware/rateLimiter');
 const {
   register, login, verifyOtp, resendOtp, getDashboard,
-  initiateKYC, verifyKYC, updateProfile, getActivity
+  initiateKYC, verifyKYC, updateProfile, getActivity, getRiskScore
 } = require('../controllers/workerController');
 
 router.post('/register', authLimiter, register);
@@ -16,5 +16,6 @@ router.post('/kyc/initiate', requireWorker, initiateKYC);
 router.post('/kyc/verify', requireWorker, verifyKYC);
 router.put('/profile', requireWorker, updateProfile);
 router.get('/activity', requireWorker, getActivity);
+router.get('/risk-score', requireWorker, getRiskScore);
 
 module.exports = router;

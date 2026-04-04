@@ -130,6 +130,46 @@ const PlatformDashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Premium Economics & Risk Register */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="card p-6">
+            <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-5">Platform Premium Economics</h3>
+            <div className="space-y-4 text-sm text-[var(--color-text-secondary)]">
+              <p>Current ecosystem snapshot based on average metrics:</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 bg-slate-50 rounded-lg">
+                  <p className="text-xs opacity-70">Weekly Pool (Est.)</p>
+                  <p className="font-semibold text-lg text-primary-700">₹{(stats?.insuredWorkers || 0) * 25}</p>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-lg">
+                  <p className="text-xs opacity-70">Loss Ratio Target</p>
+                  <p className="font-semibold text-lg text-success-700">65%</p>
+                </div>
+              </div>
+              <p className="text-xs pt-2 italic opacity-80 border-t border-slate-100">
+                Assumption: 100 users paying ₹25/week generates a ₹2,500 surplus. Maintaining a 60–70% loss ratio ensures sustainability against predictable weather disruptions.
+              </p>
+            </div>
+          </div>
+
+          <div className="card p-6">
+            <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-5">Live Risk Register</h3>
+            <div className="space-y-3">
+              {[
+                { title: 'GPS Spoofing at Scale', action: 'Geo-velocity checks & device binding enabled.' },
+                { title: 'Weather API Downtime', action: 'Fallback historical data sources active.' },
+                { title: 'Low User Adoption', action: 'Subsidized premium campaign suggested for Platform Partners.' },
+                { title: 'Model Drift (AI)', action: 'Quarterly Risk Model retraining cadence established.' },
+              ].map(risk => (
+                <div key={risk.title} className="text-sm border-l-2 border-danger-400 pl-3">
+                  <p className="font-semibold text-[var(--color-text-primary)]">{risk.title}</p>
+                  <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{risk.action}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </PageContent>
     </DashboardLayout>
   );

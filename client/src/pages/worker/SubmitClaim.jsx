@@ -1,5 +1,7 @@
 /**
- * SubmitClaim — disruption type selector + GPS + notes form.
+ * SubmitClaim — guided claim filing form aligned with README API spec.
+ * Includes declared income loss, photo evidence, parametric trigger info,
+ * and richer AI response display (confidence, settlement ETA, reason codes).
  */
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
@@ -7,7 +9,10 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import Sidebar from '../../components/Sidebar';
 import DashboardLayout, { PageContent } from '../../components/DashboardLayout';
-import { CloudRain, Thermometer, Waves, Wind, MapPin, FileText, AlertCircle } from 'lucide-react';
+import {
+  CloudRain, Thermometer, Waves, Wind, MapPin, FileText, AlertCircle,
+  CheckCircle2, Clock, IndianRupee, Camera, Info,
+} from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 const DISRUPTION_TYPES = [
@@ -17,13 +22,118 @@ const DISRUPTION_TYPES = [
   { key: 'poor_aqi', label: 'Poor Air Quality',  icon: Wind,        selectedBg: 'border-purple-400 bg-purple-50 text-purple-700', icon_cls: 'text-purple-500' },
 ];
 
+const MIN_LOSS = 300;
+
+// ── Result display panel (shown after submission) ─────────────────────────────
+const ClaimResultPanel = ({ result, onDone }) => {
+  const isApproved = result.status === 'AUTO_APPROVED';
+  const isFlagged  = result.status === 'FLAGGED';
+  const isRejected = result.status === 'REJECTED';
+
+  return (
+    <div className={cn(
+      'card p-6 border-2 text-center',
+      isApproved ? 'border-success-300 bg-success-50' :
+      isRejected  ? 'border-danger-300 bg-danger-50'  :
+                    'border-warning-300 bg-warning-50'
+    )}>
+      <div className="flex justify-center mb-4">
+        {isApproved && <CheckCircle2 className="w-14 h-14 text-success-500" />}
+        {isFlagged  && <Clock       className="w-14 h-14 text-warning-500" />}
+        {isRejected && <AlertCircle className="w-14 h-14 text-danger-500"  />}
+      </div>
+
+      <p className={cn('text-xl font-bold mb-1',
+        isApproved ? 'text-success-800' : isRejected ? 'text-danger-800' : 'text-warning-800'
+      )}>
+        {isApproved ? '✅ Claim Approved' : isFlagged ? '⏳ Under Review' : '❌ Claim Rejected'}
+      </p>
+
+      <p className={cn('text-sm mb-4',
+        isApproved ? 'text-success-700' : isRejected ? 'text-danger-700' : 'text-warning-700'
+      )}>
+        {result.message}
+      </p>
+
+      {/* Approved payout details */}
+      {isApproved && (
+        <div className="rounded-lg bg-success-100 border border-success-200 p-4 mb-4 text-left space-y-2">
+          {result.claim_amount_inr && (
+            <div className="flex justify-between text-sm">
+              <span className="text-success-700 font-medium">Approved Payout</span>
+              <span className="text-success-900 font-bold">₹{result.claim_amount_inr.toLocaleString('en-IN')}</span>
+            </div>
+          )}
+          {result.settlement_eta && (
+            <div className="flex justify-between text-sm">
+              <span className="text-success-700 font-medium">Settlement ETA</span>
+              <span className="text-success-900 font-bold">
+                {new Date(result.settlement_eta).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+              </span>
+            </div>
+          )}
+          {result.ai_confidence !== undefined && (
+            <div className="flex justify-between text-sm">
+              <span className="text-success-700 font-medium">AI Confidence</span>
+              <span className="text-success-900 font-bold">{Math.round(result.ai_confidence * 100)}%</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Flagged / review info */}
+      {isFlagged && (
+        <div className="rounded-lg bg-warning-100 border border-warning-200 p-4 mb-4 text-left">
+          <p className="text-xs font-semibold text-warning-800 mb-2">Why was this flagged?</p>
+          {result.reason_codes?.length > 0 ? (
+            <ul className="space-y-1">
+              {result.reason_codes.map((code, i) => (
+                <li key={i} className="text-xs text-warning-700 flex items-center gap-1.5">
+                  <span className="w-1 h-1 rounded-full bg-warning-500 inline-block" />
+                  {code.replace(/_/g, ' ')}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-xs text-warning-700">Your claim is being manually reviewed by our team.</p>
+          )}
+          <p className="text-xs text-warning-600 mt-2 font-medium">Decision within 2 business days.</p>
+        </div>
+      )}
+
+      {/* Rejected reason codes */}
+      {isRejected && result.reason_codes?.length > 0 && (
+        <div className="rounded-lg bg-danger-100 border border-danger-200 p-4 mb-4 text-left">
+          <p className="text-xs font-semibold text-danger-800 mb-2">Rejection reasons:</p>
+          <ul className="space-y-1">
+            {result.reason_codes.map((code, i) => (
+              <li key={i} className="text-xs text-danger-700 flex items-center gap-1.5">
+                <span className="w-1 h-1 rounded-full bg-danger-500 inline-block" />
+                {code.replace(/_/g, ' ')}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <button onClick={onDone} className="btn-primary mt-2">
+        {isApproved ? 'View My Claims' : 'Back to Dashboard'}
+      </button>
+    </div>
+  );
+};
+
+// ── Main form ─────────────────────────────────────────────────────────────────
 const SubmitClaim = () => {
-  const navigate = useNavigate();
-  const [selected, setSelected] = useState('rain');
-  const [notes, setNotes] = useState('');
-  const [gps, setGps] = useState(null);
+  const navigate    = useNavigate();
+  const [selected,  setSelected]  = useState('rain');
+  const [lossAmt,   setLossAmt]   = useState('');
+  const [photoUrl,  setPhotoUrl]  = useState('');
+  const [notes,     setNotes]     = useState('');
+  const [gps,       setGps]       = useState(null);
   const [fetchingGps, setFetchingGps] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading,   setLoading]   = useState(false);
+  const [result,    setResult]    = useState(null); // successful submission result
 
   const getGPS = () => {
     setFetchingGps(true);
@@ -50,17 +160,65 @@ const SubmitClaim = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const parsedLoss = parseFloat(lossAmt);
+
+    if (!lossAmt || isNaN(parsedLoss) || parsedLoss < MIN_LOSS) {
+      toast.error(`Minimum declared income loss is ₹${MIN_LOSS}`);
+      return;
+    }
+
     setLoading(true);
     try {
-      await api.post('/claim/submit', { disruption_type: selected, gps_at_claim: gps, notes });
-      toast.success('✅ Claim submitted successfully!');
-      navigate('/worker/claims');
+      const res = await api.post('/claim/submit', {
+        disruption_type:          selected,
+        declared_income_loss_inr: parsedLoss,
+        photo_evidence_url:       photoUrl || undefined,
+        gps_at_claim:             gps,
+        notes,
+      });
+      setResult(res.data);
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Claim submission failed');
+      const errData = err.response?.data;
+      // Show structured error messages from the server
+      if (errData?.error === 'WAITING_PERIOD_ACTIVE') {
+        const endsOn = errData.waiting_period_ends
+          ? new Date(errData.waiting_period_ends).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+          : '';
+        toast.error(`⏳ Waiting period active. Claims eligible from ${endsOn}.`);
+      } else if (errData?.error === 'MONTHLY_CAP_REACHED') {
+        toast.error(`Monthly claim cap (${errData.max_allowed}) reached for this month.`);
+      } else if (errData?.error === 'BELOW_MIN_THRESHOLD') {
+        toast.error(`Minimum loss threshold is ₹${errData.minimum_required}.`);
+      } else if (errData?.error === 'NO_PARAMETRIC_TRIGGER') {
+        toast.error('No qualifying weather event in your zone today. Only parametric disruptions are covered.');
+      } else {
+        toast.error(errData?.message || errData?.error || 'Claim submission failed');
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  // Show result panel after successful submission
+  if (result) {
+    return (
+      <DashboardLayout>
+        <Sidebar />
+        <PageContent>
+          <div className="max-w-xl mx-auto">
+            <div className="page-header">
+              <h1 className="page-title">Claim Submitted</h1>
+              <p className="page-subtitle">Here's the AI review result for your claim</p>
+            </div>
+            <ClaimResultPanel
+              result={result}
+              onDone={() => navigate(result.status === 'AUTO_APPROVED' ? '/worker/claims' : '/worker/dashboard')}
+            />
+          </div>
+        </PageContent>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -69,10 +227,11 @@ const SubmitClaim = () => {
         <div className="max-w-xl mx-auto">
           <div className="page-header">
             <h1 className="page-title">File a Disruption Claim</h1>
-            <p className="page-subtitle">Select the type of disruption affecting your work today</p>
+            <p className="page-subtitle">Select the disruption type and provide details to get covered</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+
             {/* Disruption type */}
             <div className="card p-5">
               <h3 className="label mb-3">Disruption Type *</h3>
@@ -93,6 +252,36 @@ const SubmitClaim = () => {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Declared income loss — required, min ₹300 */}
+            <div className="card p-5">
+              <h3 className="label mb-1 flex items-center gap-1.5">
+                <IndianRupee className="w-4 h-4" />
+                Declared Income Loss *
+              </h3>
+              <p className="text-xs text-[var(--color-text-muted)] mb-3">
+                How much income did you lose today due to this disruption? Minimum ₹{MIN_LOSS}.
+              </p>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] font-medium text-sm">₹</span>
+                <input
+                  type="number"
+                  className="input-field pl-7"
+                  placeholder="e.g. 500"
+                  min={MIN_LOSS}
+                  step="50"
+                  value={lossAmt}
+                  onChange={e => setLossAmt(e.target.value)}
+                  required
+                />
+              </div>
+              {lossAmt && parseFloat(lossAmt) < MIN_LOSS && (
+                <p className="text-xs text-danger-600 mt-1.5 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  Minimum ₹{MIN_LOSS} required to file a claim.
+                </p>
+              )}
             </div>
 
             {/* GPS */}
@@ -121,6 +310,24 @@ const SubmitClaim = () => {
               )}
             </div>
 
+            {/* Photo evidence (optional) */}
+            <div className="card p-5">
+              <h3 className="label mb-1 flex items-center gap-1.5">
+                <Camera className="w-4 h-4" />
+                Photo Evidence <span className="text-[var(--color-text-muted)] font-normal text-xs ml-1">(optional but recommended)</span>
+              </h3>
+              <p className="text-xs text-[var(--color-text-muted)] mb-3">
+                Paste a URL to a photo showing the disruption (flood, rain, etc.). Helps speed up approval.
+              </p>
+              <input
+                type="url"
+                className="input-field"
+                placeholder="https://example.com/photo.jpg"
+                value={photoUrl}
+                onChange={e => setPhotoUrl(e.target.value)}
+              />
+            </div>
+
             {/* Notes */}
             <div className="card p-5">
               <h3 className="label mb-3">Additional Notes</h3>
@@ -132,13 +339,28 @@ const SubmitClaim = () => {
               />
             </div>
 
+            {/* Policy info box */}
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 flex items-start gap-3">
+              <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-blue-800">How claims are evaluated</p>
+                <ul className="text-xs text-blue-700 mt-1 space-y-0.5 list-disc list-inside">
+                  <li>A qualifying weather event must be active in your zone</li>
+                  <li>Minimum income loss: ₹{MIN_LOSS} per claim</li>
+                  <li>Maximum 2 approved claims per calendar month</li>
+                  <li>Payout capped at 40% of your declared weekly income</li>
+                  <li>Auto-approved claims are paid within 24 hours via UPI</li>
+                </ul>
+              </div>
+            </div>
+
             {/* Fraud notice */}
             <div className="rounded-xl border border-warning-200 bg-warning-50 p-4 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-warning-600 shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-warning-800">Fraud Prevention Notice</p>
                 <p className="text-xs text-warning-700 mt-0.5">
-                  False claims will be flagged by our fraud engine, which validates against real-time weather data and your work history. Violations may result in account suspension.
+                  Claims are validated by our AI fraud detection engine using GPS data, weather records, and your work history. False claims result in account suspension.
                 </p>
               </div>
             </div>
@@ -146,7 +368,7 @@ const SubmitClaim = () => {
             <button
               type="submit"
               className="btn-primary w-full py-3.5 text-base"
-              disabled={loading}
+              disabled={loading || !lossAmt || parseFloat(lossAmt) < MIN_LOSS}
             >
               {loading
                 ? <span className="spinner border-white border-t-transparent" />
