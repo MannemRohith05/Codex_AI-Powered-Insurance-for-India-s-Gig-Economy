@@ -16,10 +16,22 @@ const platformRoutes = require('./routes/platform');
 
 const app = express();
 
-// Security & parsing
-// app.use(helmet({ crossOriginResourcePolicy: false })); // disabled to prevent preflight blocks
-app.use(cors());
-app.options('*', cors());
+// CORS — must come before all routes and body parsers
+const corsOptions = {
+  origin: [
+    'https://gig-shield-ten.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with'],
+  credentials: true,
+  optionsSuccessStatus: 200, // Some browsers (IE11) choke on 204
+};
+
+// Handle preflight for ALL routes FIRST
+app.options('*', cors(corsOptions));
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 if (process.env.NODE_ENV !== 'test') app.use(morgan('dev'));
