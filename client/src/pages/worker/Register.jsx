@@ -5,14 +5,14 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../../utils/api';
-import { Shield, User, Phone, Lock, Building2, MapPin, Wallet, Smartphone, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Shield, User, Phone, Lock, Building2, MapPin, Wallet, Smartphone, Eye, EyeOff, ArrowRight, IndianRupee } from 'lucide-react';
 
-const PLATFORMS = ['Swiggy', 'Zomato', 'Zepto', 'Dunzo', 'Other'];
-const CITIES = ['Hyderabad', 'Bengaluru', 'Mumbai', 'Delhi', 'Chennai', 'Pune', 'Kolkata', 'Ahmedabad', 'Jaipur', 'Surat'];
+const PLATFORMS = ['Swiggy', 'Zomato', 'Zepto', 'Dunzo', 'Porter', 'Amazon', 'Other'];
+const CITIES = ['Hyderabad', 'Bengaluru', 'Mumbai', 'Delhi', 'Chennai', 'Pune', 'Kolkata', 'Ahmedabad', 'Vijayawada', 'Jaipur', 'Surat'];
 
 const Register = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: '', phone: '', password: '', platform: '', city: '', upi_id: '' });
+  const [form, setForm] = useState({ name: '', phone: '', password: '', platform: '', city: '', zone_pin_code: '', declared_weekly_income_inr: '', upi_id: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -26,8 +26,13 @@ const Register = () => {
       return toast.error('Password must be at least 8 characters');
     setLoading(true);
     try {
-      await api.post('/worker/register', { ...form, device_id: `web_${navigator.userAgent.slice(0, 30)}` });
-      toast.success('Registration successful! OTP sent to your phone.');
+      const res = await api.post('/worker/register', {
+        ...form,
+        declared_weekly_income_inr: form.declared_weekly_income_inr ? parseFloat(form.declared_weekly_income_inr) : 0,
+        device_id: `web_${navigator.userAgent.slice(0, 30)}`,
+      });
+      const tierMsg = res.data.risk_tier ? ` Your risk tier: ${res.data.risk_tier} (₹${res.data.premium_recommendation_inr}/week).` : '';
+      toast.success(`Registration successful! OTP sent to your phone.${tierMsg}`);
       navigate('/worker/verify-otp', { state: { phone: form.phone } });
     } catch (err) {
       toast.error(err.response?.data?.error || 'Registration failed');
@@ -127,6 +132,33 @@ const Register = () => {
                   <option value="">Select city</option>
                   {CITIES.map(c => <option key={c}>{c}</option>)}
                 </select>
+              </div>
+            </div>
+
+            {/* Zone Pin Code + Weekly Income */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="form-group">
+                <label htmlFor="zone_pin_code" className="label">
+                  <MapPin className="w-3.5 h-3.5 inline mr-1.5" />Area PIN Code
+                </label>
+                <input
+                  id="zone_pin_code" name="zone_pin_code" className="input-field"
+                  type="text" placeholder="e.g. 500001" maxLength={6}
+                  value={form.zone_pin_code} onChange={handleChange}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="declared_weekly_income_inr" className="label">
+                  <IndianRupee className="w-3.5 h-3.5 inline mr-1.5" />Avg Weekly Income
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-sm">₹</span>
+                  <input
+                    id="declared_weekly_income_inr" name="declared_weekly_income_inr" className="input-field pl-7"
+                    type="number" placeholder="e.g. 5000"
+                    value={form.declared_weekly_income_inr} onChange={handleChange}
+                  />
+                </div>
               </div>
             </div>
 

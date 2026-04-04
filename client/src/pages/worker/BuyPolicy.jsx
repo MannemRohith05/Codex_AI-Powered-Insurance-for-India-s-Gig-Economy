@@ -17,8 +17,8 @@ const TIERS = [
   {
     key: 'low',
     name: 'Basic',
-    price: '₹199',
-    monthly: 19900,
+    price: '₹60',
+    monthly: 6000,
     coverage: '₹3,000 / event',
     badge: null,
     features: ['Rain protection', 'Basic AQI cover', '5-day activation'],
@@ -26,8 +26,8 @@ const TIERS = [
   {
     key: 'medium',
     name: 'Standard',
-    price: '₹399',
-    monthly: 39900,
+    price: '₹100',
+    monthly: 10000,
     coverage: '₹7,500 / event',
     badge: 'Most Popular',
     features: ['All Basic features', 'Heatwave cover', 'Flood protection', '24hr support'],
@@ -35,8 +35,8 @@ const TIERS = [
   {
     key: 'high',
     name: 'Premium',
-    price: '₹799',
-    monthly: 79900,
+    price: '₹160',
+    monthly: 16000,
     coverage: '₹15,000 / event',
     badge: 'Best Value',
     features: ['All Standard features', 'Instant payout', 'Priority review', 'Dedicated support'],
@@ -183,7 +183,7 @@ const BuyPolicy = () => {
           </div>
 
           {/* CTA */}
-          <div className="flex flex-col items-center gap-3">
+          <div className="flex flex-col items-center gap-3 mb-12">
             <button
               onClick={handleBuy}
               className="btn-primary px-10 py-3.5 text-base"
@@ -198,6 +198,25 @@ const BuyPolicy = () => {
               <Lock className="w-3 h-3" />
               Powered by Razorpay • Secure 256-bit payment
             </p>
+          </div>
+
+          {/* Coverage Exclusions */}
+          <div className="border border-danger-200 bg-danger-50 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-danger-900 mb-2">Coverage Exclusions & Terms</h3>
+            <div className="text-sm text-danger-800 space-y-2">
+              <p><strong>What is NOT covered:</strong></p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Pandemics or government-mandated disease lockdowns.</li>
+                <li>Self-caused vehicle breakdowns or negligence.</li>
+                <li>War, civil unrest, or riots.</li>
+                <li>Pre-existing medical conditions.</li>
+              </ul>
+              <p className="mt-3"><strong>Policy Terms:</strong></p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li><strong>7-Day Waiting Period:</strong> Claims are not eligible within the first 7 days of registering for a new policy.</li>
+                <li><strong>Settlement Timeline:</strong> Eligible claims are settled T+2 business days after AI approval.</li>
+              </ul>
+            </div>
           </div>
         </div>
       </PageContent>

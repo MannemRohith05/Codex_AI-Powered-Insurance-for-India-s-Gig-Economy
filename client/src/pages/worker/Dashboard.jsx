@@ -1,16 +1,21 @@
 /**
  * Worker Dashboard — the primary screen after login.
  * Priority hierarchy:
- * 1. Protection status (hero — most important signal)
- * 2. Live weather threats (actionable)
- * 3. Smart alert / upsell CTA
- * 4. Recent claims (historical context)
+ * 1. Protection status with waiting period awareness (most critical signal)
+ * 2. AI Risk Profile with contributing factors breakdown
+ * 3. Live weather threats (actionable)
+ * 4. Monthly claim cap status
+ * 5. Recent claims with AI status + settlement date
  */
 import { useEffect, useState } from 'react';
 import api from '../../utils/api';
 import Sidebar from '../../components/Sidebar';
 import DashboardLayout, { PageContent } from '../../components/DashboardLayout';
-import { ShieldCheck, ShieldOff, CloudRain, ThermometerSun, AlertTriangle, Bell, CheckCircle2, Clock, XCircle, ArrowRight } from 'lucide-react';
+import {
+  ShieldCheck, ShieldOff, CloudRain, ThermometerSun, AlertTriangle, Bell,
+  CheckCircle2, Clock, XCircle, ArrowRight, TrendingUp, Calendar, BarChart2,
+  Info,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { cn } from '../../utils/cn';
@@ -22,14 +27,46 @@ const Skeleton = ({ className }) => (
 
 // ── Status badge for claims ──────────────────────────────────
 const ClaimStatusBadge = ({ status }) => {
-  if (status === 'approved') return (
-    <span className="badge-success"><CheckCircle2 className="w-3 h-3" /> Approved</span>
+  if (status === 'approved' || status === 'paid') return (
+    <span className="badge-success"><CheckCircle2 className="w-3 h-3" /> {status === 'paid' ? 'Paid' : 'Approved'}</span>
   );
-  if (status === 'pending') return (
-    <span className="badge-warning"><Clock className="w-3 h-3" /> Pending</span>
+  if (status === 'under_review') return (
+    <span className="badge-warning"><Clock className="w-3 h-3" /> In Review</span>
   );
   return (
-    <span className="badge-danger"><XCircle className="w-3 h-3" /> Rejected</span>
+    <span className="badge-danger"><XCircle className="w-3 h-3" /> {status === 'rejected' ? 'Rejected' : 'Submitted'}</span>
+  );
+};
+
+// ── AI Status badge ──────────────────────────────────────────
+const AIStatusBadge = ({ status }) => {
+  const label = status || 'PENDING';
+  const normalized = label.toUpperCase().replace('-', '_');
+  if (normalized === 'AUTO_APPROVED' || normalized === 'AUTO-APPROVED') return (
+    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-success-100 text-success-700">✓ AI Approved</span>
+  );
+  if (normalized === 'FLAGGED') return (
+    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-danger-100 text-danger-700">⚑ Flagged</span>
+  );
+  if (normalized === 'MANUAL_REVIEW') return (
+    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-orange-100 text-orange-700">👁 Manual Review</span>
+  );
+  return (
+    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-slate-100 text-slate-600">— Pending</span>
+  );
+};
+
+// ── Contributing factor impact pill ─────────────────────────
+const ImpactPill = ({ impact }) => {
+  const map = {
+    HIGH:   'bg-red-100 text-red-700',
+    MEDIUM: 'bg-orange-100 text-orange-700',
+    LOW:    'bg-slate-100 text-slate-600',
+  };
+  return (
+    <span className={cn('text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase tracking-wider', map[impact] || map.LOW)}>
+      {impact}
+    </span>
   );
 };
 
@@ -40,11 +77,7 @@ const ThreatCard = ({ icon: Icon, title, value, subtitle, level }) => {
     medium: 'border-warning-200 bg-warning-50 text-warning-700',
     low:    'border-[var(--color-border)] bg-white text-[var(--color-text-secondary)]',
   };
-  const iconColors = {
-    high:   'text-danger-500',
-    medium: 'text-warning-500',
-    low:    'text-slate-400',
-  };
+  const iconColors = { high: 'text-danger-500', medium: 'text-warning-500', low: 'text-slate-400' };
   return (
     <div className={cn('card p-5 border', levelStyles[level] || levelStyles.low)}>
       <div className="flex items-center justify-between mb-3">
@@ -63,6 +96,7 @@ const ThreatCard = ({ icon: Icon, title, value, subtitle, level }) => {
   );
 };
 
+// ── Main component ────────────────────────────────────────────
 const Dashboard = () => {
   const { user } = useAuth();
   const [data, setData] = useState(null);
@@ -70,15 +104,27 @@ const Dashboard = () => {
 
   useEffect(() => {
     Promise.all([
-      api.get('/policy/my').catch(() => ({ data: {} })),
+      api.get('/policy/status').catch(() => api.get('/policy/my').catch(() => ({ data: {} }))),
       api.get('/claim/my').catch(() => ({ data: { claims: [] } })),
-    ]).then(([policyRes, claimRes]) => {
+      api.get('/worker/risk-score').catch(() => ({ data: { risk_score: null } })),
+    ]).then(([policyRes, claimRes, riskRes]) => {
+      // Handle both /status and /my responses
+      const pData = policyRes.data;
+      const policy = pData.policy_id ? pData           // /status response
+        : pData.policies?.find(p => p.status === 'active') || null; // /my response
+
       setData({
-        policy: policyRes.data.policies?.find(p => p.status === 'active') || null,
-        claims: claimRes.data.claims?.slice(0, 5) || [],
+        policy,
+        claims:   claimRes.data.claims?.slice(0, 5) || [],
+        risk:     riskRes.data || null,
       });
     }).finally(() => setLoading(false));
   }, []);
+
+  const waitingActive = data?.policy?.waiting_period_active ||
+    (data?.policy?.waiting_period_end_date && new Date() < new Date(data.policy.waiting_period_end_date));
+
+  const waitingEnd = data?.policy?.waiting_period_end_date;
 
   return (
     <DashboardLayout>
@@ -98,28 +144,67 @@ const Dashboard = () => {
           </Link>
         </div>
 
-        {/* ── Hero: protection status ── */}
+        {/* ── Hero: protection status + waiting period ── */}
         {loading ? (
           <Skeleton className="h-28 mb-6 rounded-xl" />
         ) : data?.policy ? (
-          <div className="mb-6 rounded-xl border border-success-200 bg-success-50 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-11 h-11 bg-success-100 rounded-xl flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-6 h-6 text-success-600" />
+          <div className={cn(
+            'mb-6 rounded-xl border p-5 flex flex-col gap-3',
+            waitingActive
+              ? 'border-blue-200 bg-blue-50'
+              : 'border-success-200 bg-success-50'
+          )}>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center shrink-0',
+                  waitingActive ? 'bg-blue-100' : 'bg-success-100'
+                )}>
+                  {waitingActive
+                    ? <Clock className="w-6 h-6 text-blue-600" />
+                    : <ShieldCheck className="w-6 h-6 text-success-600" />}
+                </div>
+                <div>
+                  <p className={cn('font-semibold', waitingActive ? 'text-blue-800' : 'text-success-800')}>
+                    {waitingActive
+                      ? 'Waiting Period Active — Claims Not Yet Eligible'
+                      : `Actively Protected — ${(data.policy.premium_tier || data.policy.risk_tier || 'medium')?.charAt(0).toUpperCase() + (data.policy.premium_tier || data.policy.risk_tier || 'medium')?.slice(1).toLowerCase()} Plan`}
+                  </p>
+                  <p className={cn('text-sm', waitingActive ? 'text-blue-600' : 'text-success-600')}>
+                    {waitingActive && waitingEnd
+                      ? `Claims eligible from ${new Date(waitingEnd).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                      : data.policy.next_renewal_date || data.policy.end_date
+                        ? `Valid until ${new Date(data.policy.next_renewal_date || data.policy.end_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                        : 'Active policy'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="font-semibold text-success-800">
-                  Actively Protected — {data.policy.premium_tier?.charAt(0).toUpperCase() + data.policy.premium_tier?.slice(1)} Plan
+              <div className="sm:text-right flex sm:flex-col items-center sm:items-end gap-2">
+                <p className={cn('text-xs font-medium', waitingActive ? 'text-blue-600' : 'text-success-600')}>
+                  {waitingActive ? '7-day waiting period' : 'Auto-claim on disruption'}
                 </p>
-                <p className="text-sm text-success-600">
-                  Valid until {new Date(data.policy.end_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                </p>
+                <span className={waitingActive ? 'badge-warning mt-1' : 'badge-success mt-1'}>
+                  {waitingActive ? '⏳ Waiting' : '● Live'}
+                </span>
               </div>
             </div>
-            <div className="sm:text-right">
-              <p className="text-xs text-success-600 font-medium">Auto-claim on disruption</p>
-              <span className="badge-success mt-1">● Live</span>
-            </div>
+
+            {/* Claims usage bar */}
+            {!waitingActive && (
+              <div className="pt-2 border-t border-success-200">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs text-success-700 font-medium">Monthly claims used</p>
+                  <p className="text-xs text-success-700 font-bold">
+                    {data.policy.claims_this_month ?? 0} / {data.policy.max_claims_allowed ?? 2}
+                  </p>
+                </div>
+                <div className="h-1.5 bg-success-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-success-500 rounded-full transition-all"
+                    style={{ width: `${((data.policy.claims_this_month ?? 0) / (data.policy.max_claims_allowed ?? 2)) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="mb-6 rounded-xl border border-warning-200 bg-warning-50 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -138,26 +223,75 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* ── Weather threats ── */}
-        <div className="mb-6">
-          <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
-            <Bell className="w-4 h-4 text-[var(--color-text-muted)]" />
-            Live Threat Monitor
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <ThreatCard icon={CloudRain}       title="Precipitation" value="Alert"   subtitle="Heavy rain expected at 4:00 PM." level="high"   />
-            <ThreatCard icon={ThermometerSun}  title="Heat Index"    value="34°C"    subtitle="Normal levels. No action needed." level="low"  />
-            <ThreatCard icon={AlertTriangle}   title="Air Quality"   value="AQI 142" subtitle="Moderate — no coverage triggered."  level="medium" />
+        {/* ── Weather threats + AI Risk Profile (side by side) ── */}
+        <div className="mb-6 grid gap-6 lg:grid-cols-5">
+          {/* Weather threats — 3 cols */}
+          <div className="lg:col-span-3">
+            <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+              <Bell className="w-4 h-4 text-[var(--color-text-muted)]" />
+              Live Threat Monitor
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <ThreatCard icon={CloudRain}      title="Precipitation" value="Alert"   subtitle="Heavy rain expected at 4:00 PM." level="high"   />
+              <ThreatCard icon={ThermometerSun} title="Heat Index"    value="34°C"    subtitle="Normal levels."                  level="low"    />
+              <ThreatCard icon={AlertTriangle}  title="Air Quality"   value="AQI 142" subtitle="Moderate — no coverage triggered." level="medium" />
+            </div>
+          </div>
+
+          {/* AI Risk Profile — 2 cols with contributing factors */}
+          <div className="lg:col-span-2">
+            <h2 className="text-base font-semibold text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+              <BarChart2 className="w-4 h-4 text-[var(--color-text-muted)]" />
+              AI Risk Profile
+            </h2>
+            {loading ? (
+              <Skeleton className="h-[160px] rounded-xl" />
+            ) : (
+              <div className="card p-5 border border-primary-200 bg-primary-50">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-primary-700 opacity-80">Risk Tier</p>
+                    <p className="text-2xl font-bold tracking-tight text-primary-900 capitalize">
+                      {(data?.risk?.risk_tier || 'Unknown').toUpperCase()}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-primary-700">Score</p>
+                    <p className="text-xl font-bold text-primary-800">{data?.risk?.risk_score ?? '--'}<span className="text-xs font-normal">/100</span></p>
+                  </div>
+                </div>
+                {/* Contributing factors */}
+                {data?.risk?.contributing_factors?.length > 0 && (
+                  <div className="space-y-1.5 border-t border-primary-200 pt-3">
+                    {data.risk.contributing_factors.slice(0, 3).map((f, i) => (
+                      <div key={i} className="flex items-center justify-between">
+                        <p className="text-xs text-primary-700 capitalize truncate max-w-[60%]">
+                          {f.feature.replace(/_/g, ' ')}
+                        </p>
+                        <ImpactPill impact={f.impact} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {data?.risk?.premium_recommendation_inr && (
+                  <p className="text-xs text-primary-600 mt-3 font-medium">
+                    Recommended premium: ₹{data.risk.premium_recommendation_inr}/week
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* ── Upsell CTA (loss aversion) ── */}
+        {/* ── Upsell CTA ── */}
         <div className="mb-6 card border-orange-200 bg-orange-50 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-orange-500 mt-0.5 shrink-0" />
             <div>
               <p className="font-semibold text-orange-900 text-sm">Severe weather forecast for tomorrow</p>
-              <p className="text-xs text-orange-700 mt-0.5">Protect your shift before premiums increase. Estimated income at risk: <strong>₹800</strong></p>
+              <p className="text-xs text-orange-700 mt-0.5">
+                Protect your shift before premiums increase. Estimated income at risk: <strong>₹800</strong>
+              </p>
             </div>
           </div>
           <Link to="/worker/buy-policy" className="btn shrink-0 bg-orange-600 hover:bg-orange-700 text-white text-sm px-4 py-2 rounded-lg">
@@ -175,9 +309,7 @@ const Dashboard = () => {
           </div>
 
           {loading ? (
-            <div className="space-y-3">
-              {[1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}
-            </div>
+            <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
           ) : data?.claims?.length > 0 ? (
             <div className="card overflow-hidden">
               <div className="overflow-x-auto">
@@ -187,20 +319,38 @@ const Dashboard = () => {
                       <th>Claim ID</th>
                       <th>Type</th>
                       <th>Date</th>
-                      <th>Amount</th>
+                      <th>Loss Declared</th>
+                      <th>Payout</th>
+                      <th>AI Review</th>
                       <th>Status</th>
+                      <th>Settlement</th>
                     </tr>
                   </thead>
                   <tbody>
                     {data.claims.map(claim => (
                       <tr key={claim._id}>
-                        <td className="font-mono text-xs text-[var(--color-text-primary)]">#{claim._id?.slice(-6).toUpperCase()}</td>
-                        <td className="capitalize">{claim.disruption_type || 'N/A'}</td>
-                        <td>{new Date(claim.createdAt).toLocaleDateString('en-IN')}</td>
-                        <td className="font-semibold text-[var(--color-text-primary)]">
-                          {claim.payout_amount ? `₹${claim.payout_amount}` : '—'}
+                        <td className="font-mono text-xs text-[var(--color-text-primary)]">
+                          #{claim._id?.slice(-6).toUpperCase()}
                         </td>
+                        <td className="capitalize">{(claim.disruption_type || 'N/A').replace('_', ' ')}</td>
+                        <td>{new Date(claim.createdAt).toLocaleDateString('en-IN')}</td>
+                        <td className="text-[var(--color-text-secondary)]">
+                          {claim.declared_income_loss_inr ? `₹${claim.declared_income_loss_inr.toLocaleString('en-IN')}` : '—'}
+                        </td>
+                        <td className="font-semibold text-[var(--color-text-primary)]">
+                          {claim.claim_amount_inr
+                            ? `₹${claim.claim_amount_inr.toLocaleString('en-IN')}`
+                            : claim.amount_claimed
+                              ? `₹${Math.round(claim.amount_claimed / 100).toLocaleString('en-IN')}`
+                              : '—'}
+                        </td>
+                        <td><AIStatusBadge status={claim.ai_status} /></td>
                         <td><ClaimStatusBadge status={claim.status} /></td>
+                        <td className="text-xs text-[var(--color-text-secondary)]">
+                          {claim.settlement_date
+                            ? new Date(claim.settlement_date).toLocaleDateString('en-IN')
+                            : claim.status === 'approved' || claim.status === 'paid' ? 'Initiated' : '—'}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
