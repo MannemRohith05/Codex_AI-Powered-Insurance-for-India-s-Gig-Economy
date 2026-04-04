@@ -1,4 +1,4 @@
-# ── GigShield Root Dockerfile ─────────────────────────────────────────────────
+# ── GigShield Root Dockerfile (Optimized for Backend Deployment) ────────────
 FROM node:18-alpine
 
 WORKDIR /app
@@ -6,17 +6,11 @@ WORKDIR /app
 # Copy everything
 COPY . .
 
-# Install all dependencies
-RUN npm install
-RUN cd client && npm install
+# Install server dependencies only
 RUN cd server && npm install
 
-# Build frontend
-RUN cd client && npm run build
+# Expose backend port
+EXPOSE 10000
 
-# Expose ports
-EXPOSE 5173
-EXPOSE 5000
-
-# Start both servers
-CMD ["npm", "start"]
+# Start only the backend server
+CMD ["node", "server/server.js"]
