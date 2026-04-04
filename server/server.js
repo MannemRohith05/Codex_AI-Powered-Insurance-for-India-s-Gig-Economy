@@ -16,22 +16,30 @@ const platformRoutes = require('./routes/platform');
 
 const app = express();
 
-// CORS — must come before all routes and body parsers
-const corsOptions = {
-  origin: [
-    'https://gig-shield-ten.vercel.app',
-    'http://localhost:5173',
-    'http://localhost:3000',
-  ],
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-requested-with'],
-  credentials: true,
-  optionsSuccessStatus: 200, // Some browsers (IE11) choke on 204
-};
+// ─── CORS: raw manual middleware (bulletproof for Express 5 / Render) ─────────
+const ALLOWED_ORIGINS = [
+  'https://gig-shield-ten.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000',
+];
 
-// Handle preflight for ALL routes FIRST (Express 5 requires named wildcard)
-app.options('/{*path}', cors(corsOptions));
-app.use(cors(corsOptions));
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,x-requested-with');
+  res.setHeader('Vary', 'Origin');
+
+  // Immediately respond to preflight without hitting any route
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
+// ─────────────────────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 if (process.env.NODE_ENV !== 'test') app.use(morgan('dev'));
