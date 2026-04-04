@@ -4,7 +4,7 @@
   "description": "GigShield — Income protection insurance for gig workers",
   "scripts": {
     "install-all": "npm install && cd client && npm install && cd ../server && npm install",
-    "start": "concurrently \"cd server && npm run dev\" \"cd client && npm run dev\"",
+    "start": "cd server && npm install && npm start",
     "dev": "concurrently \"cd server && npm run dev\" \"cd client && npm run dev\"",
     "seed": "cd server && npm run seed"
   },
