@@ -299,6 +299,30 @@ const Dashboard = () => {
           </Link>
         </div>
 
+        {/* ── Phase 2: Quick Access ── */}
+        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Link to="/worker/dynamic-premium" className="flex items-center gap-4 rounded-xl border border-violet-200 bg-violet-50 p-4 hover:shadow-md transition-all group">
+            <div className="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center shrink-0">
+              <BarChart2 className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm text-violet-900">AI Premium Calculator</p>
+              <p className="text-xs text-violet-600 mt-0.5">View live breakdown of your weekly premium</p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-violet-400 group-hover:translate-x-1 transition-transform" />
+          </Link>
+          <Link to="/worker/zero-touch-claims" className="flex items-center gap-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 hover:shadow-md transition-all group">
+            <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm text-emerald-900">Zero-Touch Auto-Claims</p>
+              <p className="text-xs text-emerald-600 mt-0.5">5 automated disruption triggers — one tap to claim</p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-emerald-400 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+
         {/* ── Recent claims ── */}
         <div>
           <div className="flex items-center justify-between mb-3">

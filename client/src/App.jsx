@@ -13,6 +13,8 @@ import BuyPolicy from './pages/worker/BuyPolicy';
 import SubmitClaim from './pages/worker/SubmitClaim';
 import ClaimHistory from './pages/worker/ClaimHistory';
 import ActivityLog from './pages/worker/ActivityLog';
+import DynamicPremium from './pages/worker/DynamicPremium';
+import ZeroTouchClaims from './pages/worker/ZeroTouchClaims';
 
 // Admin pages
 import AdminLogin from './pages/admin/AdminLogin';
@@ -63,6 +65,10 @@ const App = () => {
         <Route path="/worker/submit-claim" element={<ProtectedRoute role="worker"><SubmitClaim /></ProtectedRoute>} />
         <Route path="/worker/claims" element={<ProtectedRoute role="worker"><ClaimHistory /></ProtectedRoute>} />
         <Route path="/worker/activity" element={<ProtectedRoute role="worker"><ActivityLog /></ProtectedRoute>} />
+        <Route path="/worker/dynamic-premium" element={<ProtectedRoute role="worker"><DynamicPremium /></ProtectedRoute>} />
+        <Route path="/worker/premium" element={<ProtectedRoute role="worker"><DynamicPremium /></ProtectedRoute>} />
+        <Route path="/worker/zero-touch-claims" element={<ProtectedRoute role="worker"><ZeroTouchClaims /></ProtectedRoute>} />
+        <Route path="/worker/zero-touch" element={<ProtectedRoute role="worker"><ZeroTouchClaims /></ProtectedRoute>} />
 
         {/* Admin routes */}
         <Route path="/admin/login" element={<AdminLogin />} />
