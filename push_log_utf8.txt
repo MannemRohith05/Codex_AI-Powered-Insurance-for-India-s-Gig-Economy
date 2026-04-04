@@ -1,0 +1,86 @@
+﻿git : remote: error: 
+GH013: Repository rule 
+violations found for 
+refs/heads/a.        
+At line:1 char:1
++ git push origin a 2>&1 
+| Out-File push_log.txt
++ ~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (r  
+  emote: error: ...eads   
+ /a.        :String) [    
+], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+remote: 
+remote: - GITHUB PUSH 
+PROTECTION        
+remote:   ΓÇöΓÇöΓÇöΓÇöΓÇöΓ
+ÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇö
+ΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓ
+ÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇö
+ΓÇö        
+remote:     Resolve the 
+following violations 
+before pushing again      
+  
+remote: 
+remote:     - Push cannot 
+contain secrets        
+remote: 
+remote:             
+remote:      (?) Learn 
+how to resolve a blocked 
+push        
+remote:      https://docs.
+github.com/code-security/s
+ecret-scanning/working-wit
+h-secret-scanning-and-push
+-protection/working-with-p
+ush-protection-from-the-co
+mmand-line#resolving-a-blo
+cked-push        
+remote:             
+remote:             
+remote:       ΓÇöΓÇö 
+Twilio Account String 
+Identifier ΓÇöΓÇöΓÇöΓÇöΓÇö
+ΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇöΓÇ
+öΓÇöΓÇöΓÇöΓÇö        
+remote:        locations: 
+       
+remote:          - 
+commit: fdd0964f4d8a0148c8
+953ca84a34d145f2f8db8f    
+    
+remote:            path: 
+.env:10        
+remote:             
+remote:        (?) To 
+push, remove secret from 
+commit(s) or follow this 
+URL to allow the secret.  
+      
+remote:        https://git
+hub.com/sriharsha8076/GIG-
+SHIELD/security/secret-sca
+nning/unblock-secret/3Bt8D
+pYJho1MFuW1z7pkkIViZsV    
+    
+remote:             
+remote: 
+remote: 
+To https://github.com/srih
+arsha8076/GIG-SHIELD.git
+ ! [remote rejected] a -> 
+a (push declined due to 
+repository rule 
+violations)
+error: failed to push 
+some refs to 'https://gith
+ub.com/sriharsha8076/GIG-S
+HIELD.git'
