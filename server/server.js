@@ -43,12 +43,12 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 
 const start = async () => {
   await connectDB();
-  app.listen(PORT, () => {
-    console.log(`🚀 GigShield API running on http://localhost:${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 GigShield API running on port ${PORT}`);
     startWeatherPoller();
   });
 };
