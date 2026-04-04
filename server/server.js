@@ -29,8 +29,8 @@ const corsOptions = {
   optionsSuccessStatus: 200, // Some browsers (IE11) choke on 204
 };
 
-// Handle preflight for ALL routes FIRST
-app.options('*', cors(corsOptions));
+// Handle preflight for ALL routes FIRST (Express 5 requires named wildcard)
+app.options('/{*path}', cors(corsOptions));
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
