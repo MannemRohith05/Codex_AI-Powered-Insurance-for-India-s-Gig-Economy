@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "GigShield — Income protection insurance for gig workers",
   "scripts": {
-    "install-all": "npm install && cd client && npm install && cd ../server && npm install",
-    "start": "cd server && npm install && npm start",
-    "dev": "concurrently \"cd server && npm run dev\" \"cd client && npm run dev\"",
+    "install-all": "npm install --prefix client && npm install --prefix server",
+    "start": "node server/server.js",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
     "seed": "cd server && npm run seed"
   },
   "devDependencies": {
