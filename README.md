@@ -691,3 +691,13 @@ Claims are triggered automatically when **at least one** of the following condit
 | Payments | Razorpay / UPI mandate |
 | Hosting | Vercel (frontend), Render (backend) |
 | DevOps | Docker, GitHub Actions CI/CD |
+
+---
+
+## 🔑 Hackathon Judges: Environment Variables
+
+For testing the GigShield app with full functionality (Google Maps, Twilio OTP Sandbox, Razorpay Test Mode, MongoDB), please use our pre-configured `.env` file instead of manually creating one.
+
+👉 **[Download the full `.env` file from Google Drive here](https://drive.google.com/file/d/1nUZw3ACYa2UoLba6hwHUTHAn3AAzMAcH/view?usp=sharing)**
+
+Place this `.env` file in the root directory of the project before running `npm run dev`.
