@@ -8,6 +8,7 @@ const workerSchema = new mongoose.Schema({
 
   // Platform & location
   platform:                   { type: String, enum: ['Swiggy', 'Zomato', 'Zepto', 'Dunzo', 'Porter', 'Amazon', 'Other'], required: true },
+  occupation_type:            { type: String, enum: ['delivery_rider', 'construction_worker', 'street_vendor', 'domestic_worker', 'factory_worker', 'auto_driver', 'other'], default: 'delivery_rider' },
   city:                       { type: String, trim: true },
   zone_pin_code:              { type: String, trim: true },          // e.g. "500001"
   work_zone_geojson:          { type: mongoose.Schema.Types.Mixed }, // { lat, lng } for simple or GeoJSON polygon

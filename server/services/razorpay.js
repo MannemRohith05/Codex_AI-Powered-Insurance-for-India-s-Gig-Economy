@@ -1,11 +1,11 @@
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 
-// Premium tier config
+// Premium tier config — prices match BuyPolicy.jsx UI
 const PREMIUM_TIERS = {
-  low:    { amount: 19900, coverage: 300000, label: '₹199/month', coverage_label: '₹3,000/event' },
-  medium: { amount: 39900, coverage: 750000, label: '₹399/month', coverage_label: '₹7,500/event' },
-  high:   { amount: 79900, coverage: 1500000, label: '₹799/month', coverage_label: '₹15,000/event' },
+  low:    { amount: 6000,  coverage: 300000,  label: '₹60/month',  coverage_label: '₹3,000/event'  },
+  medium: { amount: 10000, coverage: 750000,  label: '₹100/month', coverage_label: '₹7,500/event'  },
+  high:   { amount: 16000, coverage: 1500000, label: '₹160/month', coverage_label: '₹15,000/event' },
 };
 
 // Payout multipliers based on disruption type + severity

@@ -12,7 +12,7 @@ const { computeRiskScore } = require('../services/aiEngine');
 // POST /api/worker/register
 const register = async (req, res) => {
   try {
-    const { name, phone, password, platform, city, zone_pin_code, upi_id, device_id, declared_weekly_income_inr } = req.body;
+    const { name, phone, password, platform, occupation_type, city, zone_pin_code, upi_id, device_id, declared_weekly_income_inr } = req.body;
 
     if (!name || !phone || !password || !platform) {
       return res.status(400).json({ error: 'Name, phone, password, and platform are required' });
@@ -23,7 +23,7 @@ const register = async (req, res) => {
     const password_hash = await bcrypt.hash(password, 12);
 
     // Run initial risk score on registration
-    const workerData = { platform, city, zone_pin_code, declared_weekly_income_inr: declared_weekly_income_inr || 0 };
+    const workerData = { platform, occupation_type, city, zone_pin_code, declared_weekly_income_inr: declared_weekly_income_inr || 0 };
     const riskResult = computeRiskScore(workerData);
 
     const worker = await Worker.create({
@@ -31,6 +31,7 @@ const register = async (req, res) => {
       phone,
       password_hash,
       platform,
+      occupation_type: occupation_type || 'delivery_rider',
       city,
       zone_pin_code,
       upi_id,

@@ -13,18 +13,20 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Shield, LayoutDashboard, FileText, AlertTriangle, Users,
-  Cloud, Activity, LogOut, ChevronLeft, ChevronRight, Menu, X
+  Cloud, Activity, LogOut, ChevronLeft, ChevronRight, Menu, X, Cpu, Zap
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '../utils/cn';
 
 const workerLinks = [
-  { to: '/worker/dashboard',    icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/worker/buy-policy',   icon: Shield,           label: 'My Policy' },
-  { to: '/worker/submit-claim', icon: FileText,         label: 'File Claim' },
-  { to: '/worker/claims',       icon: Activity,         label: 'Claim History' },
-  { to: '/worker/kyc',          icon: Users,            label: 'KYC / Aadhaar' },
-  { to: '/worker/activity',     icon: AlertTriangle,    label: 'Activity Log' },
+  { to: '/worker/dashboard',          icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/worker/buy-policy',         icon: Shield,          label: 'My Policy' },
+  { to: '/worker/dynamic-premium',    icon: Cpu,             label: 'AI Premium' },
+  { to: '/worker/zero-touch-claims',  icon: Zap,             label: 'Auto-Claims' },
+  { to: '/worker/submit-claim',       icon: FileText,        label: 'File Claim' },
+  { to: '/worker/claims',             icon: Activity,        label: 'Claim History' },
+  { to: '/worker/kyc',                icon: Users,           label: 'KYC / Aadhaar' },
+  { to: '/worker/activity',           icon: AlertTriangle,   label: 'Activity Log' },
 ];
 
 const adminLinks = [

@@ -22,6 +22,13 @@ const TIERS = [
     coverage: '₹3,000 / event',
     badge: null,
     features: ['Rain protection', 'Basic AQI cover', '5-day activation'],
+    coverageDetails: [
+      { label: 'Accident Cover',       value: '₹1,500', included: true },
+      { label: 'Hospitalization',      value: '₹1,000', included: true },
+      { label: 'Income Loss (Weather)',value: '₹500/day', included: true },
+      { label: 'Govt Shutdown Cover',  value: '—',       included: false },
+      { label: 'Instant Payout',       value: '—',       included: false },
+    ],
   },
   {
     key: 'medium',
@@ -31,6 +38,13 @@ const TIERS = [
     coverage: '₹7,500 / event',
     badge: 'Most Popular',
     features: ['All Basic features', 'Heatwave cover', 'Flood protection', '24hr support'],
+    coverageDetails: [
+      { label: 'Accident Cover',       value: '₹3,000', included: true },
+      { label: 'Hospitalization',      value: '₹3,000', included: true },
+      { label: 'Income Loss (Weather)',value: '₹1,000/day', included: true },
+      { label: 'Govt Shutdown Cover',  value: '₹500/day', included: true },
+      { label: 'Instant Payout',       value: '—',       included: false },
+    ],
   },
   {
     key: 'high',
@@ -40,6 +54,13 @@ const TIERS = [
     coverage: '₹15,000 / event',
     badge: 'Best Value',
     features: ['All Standard features', 'Instant payout', 'Priority review', 'Dedicated support'],
+    coverageDetails: [
+      { label: 'Accident Cover',       value: '₹6,000', included: true },
+      { label: 'Hospitalization',      value: '₹6,000', included: true },
+      { label: 'Income Loss (Weather)',value: '₹2,000/day', included: true },
+      { label: 'Govt Shutdown Cover',  value: '₹1,500/day', included: true },
+      { label: 'Instant Payout',       value: '✓ Enabled', included: true },
+    ],
   },
 ];
 
@@ -177,6 +198,19 @@ const BuyPolicy = () => {
                       </li>
                     ))}
                   </ul>
+
+                  {/* Coverage details table */}
+                  <div className="mt-4 pt-4 border-t border-[var(--color-border)]">
+                    <p className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-2">Coverage Details</p>
+                    <div className="space-y-1.5">
+                      {tier.coverageDetails.map(cd => (
+                        <div key={cd.label} className="flex items-center justify-between gap-2">
+                          <span className={cn('text-xs', cd.included ? 'text-[var(--color-text-secondary)]' : 'text-slate-300')}>{cd.label}</span>
+                          <span className={cn('text-xs font-semibold', cd.included ? 'text-[var(--color-text-primary)]' : 'text-slate-300')}>{cd.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </button>
               );
             })}

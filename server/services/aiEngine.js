@@ -31,6 +31,17 @@ const CITY_FLOOD_INDEX = {
   Ahmedabad:   0.50,
 };
 
+/** Occupation risk weight (0.0–1.0). High-risk jobs = higher premium. */
+const OCCUPATION_RISK = {
+  construction_worker: 0.85,
+  delivery_rider:      0.60,
+  factory_worker:      0.70,
+  auto_driver:         0.55,
+  street_vendor:       0.40,
+  domestic_worker:     0.45,
+  other:               0.50,
+};
+
 /** Platform exposure weight — two-wheelers are more exposed than 4W. */
 const PLATFORM_EXPOSURE = {
   Swiggy:  0.75,
@@ -64,6 +75,7 @@ function buildRiskFeatures(worker) {
   return {
     city_flood_index:              floodIndex,
     platform_exposure_weight:      platformWeight,
+    occupation_risk:               OCCUPATION_RISK[worker.occupation_type] ?? 0.50,
     declared_weekly_income_inr:    weeklyIncome,
     months_active_on_platform:     monthsActive,
     has_device_id:                 hasDevice,
@@ -89,27 +101,37 @@ function computeRiskScore(worker) {
   const factors   = [];
   let score       = 10; // base score
 
-  // Feature 1: City flood vulnerability index
-  const floodContribution = Math.round(features.city_flood_index * 40);
+  // Feature 1: Occupation risk weight
+  const occupationContribution = Math.round(features.occupation_risk * 25);
+  score += occupationContribution;
+  factors.push({
+    feature: 'occupation_type',
+    value:   worker.occupation_type || 'delivery_rider',
+    impact:  occupationContribution > 18 ? 'HIGH' : occupationContribution > 12 ? 'MEDIUM' : 'LOW',
+    contribution: occupationContribution,
+  });
+
+  // Feature 2: City flood vulnerability index
+  const floodContribution = Math.round(features.city_flood_index * 35);
   score += floodContribution;
   factors.push({
     feature: 'city_flood_index',
     value:   features.city_flood_index,
-    impact:  floodContribution > 25 ? 'HIGH' : floodContribution > 15 ? 'MEDIUM' : 'LOW',
+    impact:  floodContribution > 22 ? 'HIGH' : floodContribution > 13 ? 'MEDIUM' : 'LOW',
     contribution: floodContribution,
   });
 
-  // Feature 2: Platform exposure (two-wheeler vs four-wheeler)
-  const platformContribution = Math.round(features.platform_exposure_weight * 20);
+  // Feature 3: Platform exposure (two-wheeler vs four-wheeler)
+  const platformContribution = Math.round(features.platform_exposure_weight * 15);
   score += platformContribution;
   factors.push({
     feature: 'platform_type',
     value:   features.platform_type,
-    impact:  platformContribution > 14 ? 'HIGH' : platformContribution > 8 ? 'MEDIUM' : 'LOW',
+    impact:  platformContribution > 10 ? 'HIGH' : platformContribution > 7 ? 'MEDIUM' : 'LOW',
     contribution: platformContribution,
   });
 
-  // Feature 3: Declared weekly income (higher income → more to lose → higher tier)
+  // Feature 4: Declared weekly income (higher income → more to lose → higher tier)
   const incomeContribution = features.declared_weekly_income_inr > 7000 ? 10
     : features.declared_weekly_income_inr > 4500 ? 6 : 3;
   score += incomeContribution;
@@ -120,7 +142,7 @@ function computeRiskScore(worker) {
     contribution: incomeContribution,
   });
 
-  // Feature 4: Account tenure (newer workers = higher uncertainty)
+  // Feature 5: Account tenure (newer workers = higher uncertainty)
   const tenureContribution = features.months_active_on_platform < 2 ? 10
     : features.months_active_on_platform < 6 ? 5 : 0;
   score += tenureContribution;
@@ -141,7 +163,6 @@ function computeRiskScore(worker) {
   else                  tier = 'LOW';
 
   // Model validation metrics (from README): R² > 0.85 target
-  // Confidence is inversely proportional to score variance at the boundary
   const nearBoundary = (score > 55 && score < 65) || (score > 30 && score < 40);
   const ai_confidence = nearBoundary ? 0.84 : 0.92;
 
@@ -164,17 +185,12 @@ function computeRiskScore(worker) {
  * Mock LightGBM Binary Classifier.
  * Returns a fraud score 0.0–1.0 and named reason_codes.
  * README targets: Precision > 92%, Recall > 78%, AUC-ROC > 0.91.
- *
- * @param {Object} claimData       - { disruption_type, declared_income_loss_inr, gps_at_claim, photo_evidence_url }
- * @param {Object} worker          - Worker document
- * @param {Array}  recentClaims    - Array of recent claim documents for this worker
- * @param {Object} fraudEngineFlags - Flags already computed by fraud middleware
  */
 function computeFraudScore(claimData, worker, recentClaims = [], fraudEngineFlags = {}) {
   let score       = 0.0;
   const reasons   = [];
 
-  // Feature 1: GPS zone mismatch (already computed by fraud middleware)
+  // Feature 1: GPS zone mismatch
   if (fraudEngineFlags.geo_fence_violation) {
     score += 0.30;
     reasons.push('GPS_ZONE_MISMATCH');
@@ -209,10 +225,9 @@ function computeFraudScore(claimData, worker, recentClaims = [], fraudEngineFlag
     reasons.push('LOSS_EXCEEDS_DECLARED_INCOME');
   }
 
-  // Feature 6: No photo evidence submitted (mild signal, not conclusive)
+  // Feature 6: No photo evidence submitted (mild signal)
   if (!claimData.photo_evidence_url) {
     score += 0.05;
-    // Not added to reason_codes — too minor to show user
   }
 
   // Feature 7: Insufficient activity history
@@ -221,7 +236,6 @@ function computeFraudScore(claimData, worker, recentClaims = [], fraudEngineFlag
     reasons.push('INSUFFICIENT_ACTIVITY_HISTORY');
   }
 
-  // Clamp to 0.0–1.0
   score = Math.min(1.0, Math.max(0.0, parseFloat(score.toFixed(3))));
 
   return {
@@ -237,15 +251,10 @@ function computeFraudScore(claimData, worker, recentClaims = [], fraudEngineFlag
  * computeAnomalyScore(claimData, worker, peerStats)
  *
  * Mock Isolation Forest detection.
- * Returns an anomaly_score (continuous). Scores < -0.10 trigger manual review.
- * Used for novel fraud patterns not yet in LightGBM training data.
- *
- * @param {Object} claimData   - Claim being submitted
- * @param {Object} worker      - Worker document
- * @param {Object} peerStats   - { avg_claims_per_week_in_zone, avg_loss_inr } (pass {} if unavailable)
+ * Scores < -0.10 trigger manual review.
  */
 function computeAnomalyScore(claimData, worker, peerStats = {}) {
-  let score = 0.0; // 0 = normal; negative = anomalous
+  let score = 0.0;
 
   // Signal 1: Claim filed very shortly after policy purchase
   if (worker._policyAgeDays !== undefined && worker._policyAgeDays < 14) {
@@ -255,11 +264,8 @@ function computeAnomalyScore(claimData, worker, peerStats = {}) {
   // Signal 2: Declared loss far exceeds peer average in zone
   if (peerStats.avg_loss_inr && claimData.declared_income_loss_inr) {
     const ratio = claimData.declared_income_loss_inr / peerStats.avg_loss_inr;
-    if (ratio > 3.0) {
-      score -= 0.20;
-    } else if (ratio > 2.0) {
-      score -= 0.10;
-    }
+    if (ratio > 3.0)      score -= 0.20;
+    else if (ratio > 2.0) score -= 0.10;
   }
 
   // Signal 3: GPS accuracy suspicious (> 100m = likely mocked)
@@ -267,13 +273,12 @@ function computeAnomalyScore(claimData, worker, peerStats = {}) {
     score -= 0.12;
   }
 
-  // Score is in range [-0.5, 0.0]; threshold for flagging = -0.10
   score = Math.max(-0.5, score);
 
   return {
-    anomaly_score:    parseFloat(score.toFixed(3)),
-    is_anomalous:     score < -0.10,
-    model:            'IsolationForest-v1-mock',
+    anomaly_score:      parseFloat(score.toFixed(3)),
+    is_anomalous:       score < -0.10,
+    model:              'IsolationForest-v1-mock',
     flagged_for_review: score < -0.10,
   };
 }
@@ -283,16 +288,13 @@ function computeAnomalyScore(claimData, worker, peerStats = {}) {
 /**
  * makeClaimDecision(fraudResult, anomalyResult)
  *
- * Combines LightGBM fraud score + Isolation Forest anomaly score into
- * a single decision: AUTO_APPROVED | FLAGGED | REJECTED.
- *
  * README thresholds:
  *   Fraud score < 0.30 AND no anomaly → AUTO_APPROVED
  *   Fraud score 0.30–0.70 OR anomaly  → FLAGGED (manual review)
  *   Fraud score > 0.70                → REJECTED
  */
 function makeClaimDecision(fraudResult, anomalyResult) {
-  const { fraud_score, reason_codes } = fraudResult;
+  const { fraud_score } = fraudResult;
   const { is_anomalous } = anomalyResult;
 
   if (fraud_score > 0.70) {
