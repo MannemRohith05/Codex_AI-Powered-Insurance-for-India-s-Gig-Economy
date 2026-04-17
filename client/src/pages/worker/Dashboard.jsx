@@ -310,7 +310,7 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* ── Weather threats + AI Risk Profile (side by side) ── */}}
+        {/* ── Weather threats + AI Risk Profile (side by side) ── */}
         <div className="mb-6 grid gap-6 lg:grid-cols-5">
           {/* Weather threats — 3 cols */}
           <div className="lg:col-span-3">
