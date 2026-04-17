@@ -6,7 +6,7 @@ const claimSchema = new mongoose.Schema({
   weather_event_id:            { type: mongoose.Schema.Types.ObjectId, ref: 'WeatherEvent' }, // linked parametric trigger
 
   // Disruption info
-  disruption_type:             { type: String, enum: ['rain', 'heatwave', 'flood', 'poor_aqi', 'cyclone'], required: true },
+  disruption_type:             { type: String, enum: ['rain', 'heavy_rain', 'heatwave', 'flood', 'poor_aqi', 'cyclone'], required: true },
   declared_income_loss_inr:    { type: Number },  // what the worker claims they lost (INR)
 
   // Amounts

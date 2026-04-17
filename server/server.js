@@ -13,6 +13,8 @@ const claimRoutes = require('./routes/claim');
 const weatherRoutes = require('./routes/weather');
 const adminRoutes = require('./routes/admin');
 const platformRoutes = require('./routes/platform');
+const demoRoutes = require('./routes/demo');   // Section D
+const mlRoutes   = require('./routes/ml');     // Section F
 
 const app = express();
 
@@ -26,7 +28,7 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 }));
-app.options('*', cors()); // enable pre-flight across-the-board
+
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -39,6 +41,8 @@ app.use('/api/claim', claimRoutes);
 app.use('/api/weather', weatherRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/platform', platformRoutes);
+app.use('/api/demo', demoRoutes);   // Section D — demo trigger
+app.use('/api/ml', mlRoutes);       // Section F — ml predict stub
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));

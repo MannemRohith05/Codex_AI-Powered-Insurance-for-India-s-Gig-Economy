@@ -7,7 +7,8 @@ const DisruptionEvent = require('../models/DisruptionEvent');
 const { generateToken } = require('../utils/jwt');
 const { sendOTP, verifyOTP } = require('../services/twilio');
 const { initiateAadhaarOTP, verifyAadhaarOTP, hashAadhaar } = require('../services/sandbox');
-const { computeRiskScore } = require('../services/aiEngine');
+const { computeRiskScore, computeEnsembleScore, computeFraudScore, computeAnomalyScore } = require('../services/aiEngine');
+const { getActuarialSnapshot } = require('../services/actuarialHealth');
 
 // POST /api/worker/register
 const register = async (req, res) => {
@@ -249,8 +250,20 @@ const getRiskScore = async (req, res) => {
     const worker = await Worker.findById(workerId);
     if (!worker) return res.status(404).json({ error: 'Worker not found' });
 
-    // Run full mock XGBoost scorer
-    const result = computeRiskScore(worker);
+    // Fetch actuarial stress loading factor (GREEN=1.0, AMBER=1.10, RED=1.25)
+    let stress_loading_factor = 1.0;
+    try {
+      const actuarial = await getActuarialSnapshot();
+      stress_loading_factor = actuarial.stress_loading_factor || 1.0;
+    } catch (_) { /* non-fatal — default to 1.0 */ }
+
+    // Run upgraded XGBoost scorer with stress loading
+    const result = computeRiskScore(worker, { stress_loading_factor });
+
+    // Compute ensemble score (combines risk + dummy fraud/anomaly baseline)
+    const dummyFraud   = { fraud_score: 0.05, reason_codes: [] };
+    const dummyAnomaly = { anomaly_score: 0, is_anomalous: false };
+    const ensemble     = computeEnsembleScore(result, dummyFraud, dummyAnomaly);
 
     // Persist updated score to DB
     await Worker.findByIdAndUpdate(workerId, {
@@ -264,9 +277,13 @@ const getRiskScore = async (req, res) => {
       risk_score:                 result.risk_score,
       risk_tier:                  result.risk_tier,
       premium_recommendation_inr: result.premium_recommendation_inr,
+      stress_loading_factor:      result.stress_loading_factor,
       contributing_factors:       result.contributing_factors,
+      explanation:                result.explanation,
+      ensemble_score:             ensemble,
       ai_confidence:              result.ai_confidence,
       model:                      result.model,
+      model_metadata:             result.model_metadata,
       last_computed_at:           result.last_computed_at,
     });
   } catch (err) {

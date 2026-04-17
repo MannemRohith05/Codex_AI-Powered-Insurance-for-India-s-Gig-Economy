@@ -71,41 +71,41 @@ const seed = async () => {
       amount_claimed: 150000, amount_paid: 150000, status: 'paid',
       gps_at_claim: { lat: 17.385, lng: 78.4867 },
       weather_snapshot: { main: { temp: 28 }, rain: { '1h': 45 } },
-      fraud_score: 10, razorpay_payout_id: 'pout_mock_001',
+      fraud_score: 0.10, razorpay_payout_id: 'pout_mock_001',
     },
     {
       worker_id: workers[1]._id, policy_id: policies[1]._id, disruption_type: 'poor_aqi',
       amount_claimed: 50000, status: 'under_review',
       gps_at_claim: { lat: 17.39, lng: 78.49 },
       weather_snapshot: { main: { temp: 38, humidity: 60 } },
-      fraud_score: 25,
+      fraud_score: 0.25,
     },
     {
       worker_id: workers[2]._id, policy_id: policies[2]._id, disruption_type: 'heatwave',
       amount_claimed: 400000, status: 'under_review',
       gps_at_claim: { lat: 12.9716, lng: 77.5946 },
-      fraud_score: 65, fraud_flags: { low_acceptance_rate: '55%', multiple_claims_today: 2 },
+      fraud_score: 0.65, fraud_flags: { low_acceptance_rate: '55%', multiple_claims_today: 2 },
     },
     {
       worker_id: workers[0]._id, policy_id: policies[0]._id, disruption_type: 'flood',
       amount_claimed: 300000, status: 'submitted',
       gps_at_claim: { lat: 17.38, lng: 78.48 },
-      fraud_score: 5,
+      fraud_score: 0.05,
     },
     {
       worker_id: workers[1]._id, policy_id: policies[1]._id, disruption_type: 'rain',
       amount_claimed: 50000, status: 'rejected', rejection_reason: 'Weather data does not confirm rainfall in area',
-      fraud_score: 40, fraud_flags: { geo_fence_violation: true },
+      fraud_score: 0.40, fraud_flags: { geo_fence_violation: true },
     },
   ]);
   console.log('✅ Claims seeded');
 
   // ── Seed FraudLogs ───────────────────────────────────────────────────
   await FraudLog.insertMany([
-    { claim_id: claims[0]._id, worker_id: workers[0]._id, flags: {}, fraud_score: 10, recommendation: 'APPROVE', reviewed_by: superAdmin._id },
-    { claim_id: claims[1]._id, worker_id: workers[1]._id, flags: { low_acceptance_rate: '58%' }, fraud_score: 25, recommendation: 'REVIEW' },
-    { claim_id: claims[2]._id, worker_id: workers[2]._id, flags: { low_acceptance_rate: '55%', multiple_claims_today: 2 }, fraud_score: 65, recommendation: 'REJECT' },
-    { claim_id: claims[4]._id, worker_id: workers[1]._id, flags: { geo_fence_violation: true }, fraud_score: 40, recommendation: 'REJECT', reviewed_by: fraudAnalyst._id },
+    { claim_id: claims[0]._id, worker_id: workers[0]._id, flags: {}, fraud_score: 0.10, recommendation: 'APPROVE', reviewed_by: superAdmin._id },
+    { claim_id: claims[1]._id, worker_id: workers[1]._id, flags: { low_acceptance_rate: '58%' }, fraud_score: 0.25, recommendation: 'REVIEW' },
+    { claim_id: claims[2]._id, worker_id: workers[2]._id, flags: { low_acceptance_rate: '55%', multiple_claims_today: 2 }, fraud_score: 0.65, recommendation: 'REJECT' },
+    { claim_id: claims[4]._id, worker_id: workers[1]._id, flags: { geo_fence_violation: true }, fraud_score: 0.40, recommendation: 'REJECT', reviewed_by: fraudAnalyst._id },
   ]);
   console.log('✅ FraudLogs seeded');
 

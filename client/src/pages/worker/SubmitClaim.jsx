@@ -9,9 +9,11 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import Sidebar from '../../components/Sidebar';
 import DashboardLayout, { PageContent } from '../../components/DashboardLayout';
+import AIPipelineVisualizer from '../../components/AIPipelineVisualizer';
+import { useDemo } from '../../context/DemoContext';
 import {
   CloudRain, Thermometer, Waves, Wind, MapPin, FileText, AlertCircle,
-  CheckCircle2, Clock, IndianRupee, Camera, Info,
+  CheckCircle2, Clock, IndianRupee, Camera, Info, Zap,
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
@@ -126,6 +128,7 @@ const ClaimResultPanel = ({ result, onDone }) => {
 // ── Main form ─────────────────────────────────────────────────────────────────
 const SubmitClaim = () => {
   const navigate    = useNavigate();
+  const { demoMode, demoData } = useDemo();
   const [selected,  setSelected]  = useState('rain');
   const [lossAmt,   setLossAmt]   = useState('');
   const [photoUrl,  setPhotoUrl]  = useState('');
@@ -134,6 +137,18 @@ const SubmitClaim = () => {
   const [fetchingGps, setFetchingGps] = useState(false);
   const [loading,   setLoading]   = useState(false);
   const [result,    setResult]    = useState(null); // successful submission result
+
+  // Auto-fill form from Demo Mode scenario
+  useEffect(() => {
+    if (demoMode && demoData?.claim) {
+      const c = demoData.claim;
+      setSelected(c.disruption_type?.replace('heavy_', '') || 'rain');
+      setLossAmt(String(c.declared_income_loss_inr || ''));
+      setNotes(c.notes || '');
+      if (c.gps_at_claim) setGps(c.gps_at_claim);
+      toast.info('🎬 Demo mode: claim form pre-filled');
+    }
+  }, [demoMode, demoData]);
 
   const getGPS = () => {
     setFetchingGps(true);
@@ -205,10 +220,23 @@ const SubmitClaim = () => {
       <DashboardLayout>
         <Sidebar />
         <PageContent>
-          <div className="max-w-xl mx-auto">
+          <div className="max-w-2xl mx-auto">
             <div className="page-header">
               <h1 className="page-title">Claim Submitted</h1>
               <p className="page-subtitle">Here's the AI review result for your claim</p>
+            </div>
+            {/* AI Pipeline Visualizer — shows the scoring pipeline live */}
+            <div className="mb-4">
+              <AIPipelineVisualizer
+                fraudScore={result.fraud_score ?? 0.08}
+                anomalyScore={result.anomaly_score ?? 0}
+                decision={result.status === 'AUTO_APPROVED' ? 'AUTO_APPROVED'
+                        : result.status === 'REJECTED'      ? 'REJECTED'
+                        : 'FLAGGED'}
+                triggered={result.parametric_triggered !== false}
+                reasonCodes={result.reason_codes ?? []}
+                isRunning
+              />
             </div>
             <ClaimResultPanel
               result={result}

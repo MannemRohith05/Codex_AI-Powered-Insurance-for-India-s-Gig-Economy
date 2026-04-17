@@ -5,7 +5,7 @@ const fraudLogSchema = new mongoose.Schema({
   worker_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Worker' },
   flags: { type: mongoose.Schema.Types.Mixed, default: {} },
   fraud_score: { type: Number, default: 0 },
-  recommendation: { type: String, enum: ['APPROVE', 'REVIEW', 'REJECT'] },
+  recommendation: { type: String, enum: ['APPROVE', 'REVIEW', 'REJECT', 'AUTO_APPROVED', 'MANUAL_REVIEW', 'FLAGGED', 'REJECTED'] },
   reviewed_by: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
   reviewed_at: { type: Date },
   notes: { type: String },

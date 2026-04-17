@@ -13,7 +13,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Shield, LayoutDashboard, FileText, AlertTriangle, Users,
-  Cloud, Activity, LogOut, ChevronLeft, ChevronRight, Menu, X, Cpu, Zap
+  Cloud, Activity, LogOut, ChevronLeft, ChevronRight, Menu, X, Cpu, Zap, Clapperboard
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '../utils/cn';
@@ -35,6 +35,7 @@ const adminLinks = [
   { to: '/admin/fraud',       icon: AlertTriangle,    label: 'Fraud Panel' },
   { to: '/admin/workers',     icon: Users,            label: 'Workers' },
   { to: '/admin/disruption',  icon: Cloud,            label: 'Disruptions' },
+  { to: '/admin/demo',        icon: Clapperboard,     label: '🎬 Demo Mode' },
 ];
 
 const platformLinks = [

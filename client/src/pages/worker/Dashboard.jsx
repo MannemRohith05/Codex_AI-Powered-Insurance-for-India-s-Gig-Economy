@@ -14,9 +14,10 @@ import DashboardLayout, { PageContent } from '../../components/DashboardLayout';
 import {
   ShieldCheck, ShieldOff, CloudRain, ThermometerSun, AlertTriangle, Bell,
   CheckCircle2, Clock, XCircle, ArrowRight, TrendingUp, Calendar, BarChart2,
-  Info,
+  Info, Clapperboard, Wallet, Shield,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useDemo } from '../../context/DemoContext';
 import { Link } from 'react-router-dom';
 import { cn } from '../../utils/cn';
 
@@ -99,6 +100,7 @@ const ThreatCard = ({ icon: Icon, title, value, subtitle, level }) => {
 // ── Main component ────────────────────────────────────────────
 const Dashboard = () => {
   const { user } = useAuth();
+  const { demoMode, toggleDemo, activeScenario, setScenario, DEMO_SCENARIOS } = useDemo();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -139,9 +141,37 @@ const Dashboard = () => {
             </h1>
             <p className="page-subtitle mt-0.5">Here's your protection status for today.</p>
           </div>
-          <Link to="/worker/buy-policy" className="btn-secondary shrink-0 text-sm">
-            Manage Plan <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Demo Mode toggle — for judges/reviewers */}
+            <div className="flex items-center gap-1.5">
+              {demoMode && (
+                <select
+                  value={activeScenario}
+                  onChange={e => setScenario(e.target.value)}
+                  className="text-xs border border-amber-300 bg-amber-50 text-amber-800 rounded-lg px-2 py-1.5 font-medium focus:outline-none"
+                >
+                  {Object.entries(DEMO_SCENARIOS).map(([key, s]) => (
+                    <option key={key} value={key}>{s.label}</option>
+                  ))}
+                </select>
+              )}
+              <button
+                onClick={toggleDemo}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all',
+                  demoMode
+                    ? 'bg-amber-500 border-amber-400 text-white shadow-md'
+                    : 'bg-white border-slate-200 text-slate-500 hover:border-amber-300 hover:text-amber-600'
+                )}
+                title={demoMode ? 'Exit demo mode' : 'Activate demo mode for presentation'}
+              >
+                🎬 {demoMode ? 'Exit Demo' : 'Demo Mode'}
+              </button>
+            </div>
+            <Link to="/worker/buy-policy" className="btn-secondary text-sm">
+              Manage Plan <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
 
         {/* ── Hero: protection status + waiting period ── */}
@@ -223,7 +253,64 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* ── Weather threats + AI Risk Profile (side by side) ── */}
+        {/* ── This Week at a Glance ── */}
+        {!loading && (
+          <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Earnings protected this week */}
+            <div className="card p-5 border border-emerald-200 bg-emerald-50">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Earnings Protected This Week</p>
+                <Wallet className="w-4 h-4 text-emerald-500" />
+              </div>
+              <p className="text-2xl font-bold text-emerald-900">
+                {(() => {
+                  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+                  const earned = (data?.claims || []).filter(c =>
+                    (c.status === 'paid' || c.status === 'approved') &&
+                    new Date(c.createdAt) >= sevenDaysAgo
+                  ).reduce((s, c) => s + (c.claim_amount_inr || 0), 0);
+                  return `₹${earned.toLocaleString('en-IN')}`;
+                })()}
+              </p>
+              <p className="text-xs text-emerald-600 mt-1">From approved claims (last 7 days)</p>
+            </div>
+
+            {/* Active coverage amount */}
+            <div className="card p-5 border border-blue-200 bg-blue-50">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">Active Coverage</p>
+                <Shield className="w-4 h-4 text-blue-500" />
+              </div>
+              <p className="text-2xl font-bold text-blue-900">
+                {data?.policy?.coverage_amount
+                  ? `₹${Number(data.policy.coverage_amount).toLocaleString('en-IN')}`
+                  : data?.policy ? 'Active' : 'None'}
+              </p>
+              <p className="text-xs text-blue-600 mt-1 capitalize">
+                {data?.policy
+                  ? `${(data.policy.premium_tier || 'medium')} plan • per event`
+                  : 'No active policy'}
+              </p>
+            </div>
+
+            {/* Weekly claim usage */}
+            <div className="card p-5 border border-violet-200 bg-violet-50">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold uppercase tracking-wider text-violet-700">Weekly Summary</p>
+                <BarChart2 className="w-4 h-4 text-violet-500" />
+              </div>
+              <p className="text-2xl font-bold text-violet-900">
+                {(() => {
+                  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+                  return (data?.claims || []).filter(c => new Date(c.createdAt) >= sevenDaysAgo).length;
+                })()} <span className="text-sm font-normal text-violet-600">claim(s)</span>
+              </p>
+              <p className="text-xs text-violet-600 mt-1">Filed this week</p>
+            </div>
+          </div>
+        )}
+
+        {/* ── Weather threats + AI Risk Profile (side by side) ── */}}
         <div className="mb-6 grid gap-6 lg:grid-cols-5">
           {/* Weather threats — 3 cols */}
           <div className="lg:col-span-3">

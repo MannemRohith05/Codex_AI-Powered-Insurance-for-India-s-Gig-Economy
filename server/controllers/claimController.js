@@ -7,6 +7,7 @@ const { PAYOUT_AMOUNTS, processPayout } = require('../services/razorpay');
 const { fetchOpenWeatherMap } = require('../services/weather');
 const { getCachedWeatherForZone, evaluateParametricTriggers } = require('../services/weather');
 const { computeFraudScore, computeAnomalyScore, makeClaimDecision } = require('../services/aiEngine');
+const { runFullFraudCheck } = require('../services/fraudDetection'); // Section A
 
 // ── Constants (matching README spec) ─────────────────────────────────────────
 const MIN_LOSS_THRESHOLD_INR = 300;   // Minimum declared loss to be eligible
@@ -134,11 +135,25 @@ const submitClaim = async (req, res) => {
     // Attach policy age for anomaly scorer
     worker._policyAgeDays = Math.floor((Date.now() - new Date(policy.start_date)) / (1000 * 60 * 60 * 24));
 
+    // ── Section A: Run modular fraud detection (GPS + Weather) first ─────────
+    const fullFraudCheck = runFullFraudCheck(
+      { disruption_type, declared_income_loss_inr, gps_at_claim, photo_evidence_url },
+      worker,
+      null,             // previousGps — not tracked in MVP; extend ActivityLog for this
+      weather_snapshot, // recorded zone weather passed in
+    );
+
+    // Merge external flags from request with new fraud detection flags
+    const mergedFraudFlags = {
+      ...fraudFlags,
+      ...fullFraudCheck.fraud_engine_flags,
+    };
+
     const fraudResult   = computeFraudScore(
       { disruption_type, declared_income_loss_inr, gps_at_claim, photo_evidence_url },
       worker,
       recentClaims,
-      fraudFlags,
+      mergedFraudFlags,
     );
 
     const anomalyResult = computeAnomalyScore(
