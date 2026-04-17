@@ -1,0 +1,289 @@
+Create a professional, modern pitch deck presentation for a hackathon project called GigShield. Use a dark, sleek theme with orange and teal accent colors. The tone should be bold, impactful, and startup-style. Here is the full content for each slide:
+
+---
+
+SLIDE 1 — TITLE SLIDE
+Title: GigShield
+Subtitle: Parametric Income Protection for India's Gig Workers
+Tagline: "What if a delivery partner could earn even when they can't work?"
+Note: Add a background image of a delivery rider in rain. Team: Team Codex
+
+---
+
+SLIDE 2 — THE PROBLEM
+Heading: 15 Crore Workers. Zero Safety Net.
+Content:
+- India's gig workers (Swiggy, Zomato, Zepto, Amazon) earn ₹800–₹1,000/day
+- Heavy rain, floods, heatwaves, and poor air quality stop them from working
+- Workers lose 20–30% of monthly income with no recourse
+- There is no existing financial protection system for weather-related income loss
+- A 3-day monsoon event = ₹2,500–₹3,000 in lost earnings per worker
+
+Use a stat callout: "1 in 3 gig workers face income disruption every monsoon season"
+
+---
+
+SLIDE 3 — MEET RAVI (USER PERSONA)
+Heading: The Face Behind the Problem
+Content:
+- Name: Ravi, Delivery Partner, Vijayawada
+- Daily earnings: ₹800–₹1,000 (delivery commissions + incentives)
+- Dependents: Wife + 2 children
+- During last monsoon: couldn't work 4 days → lost ₹3,200
+- Could not pay rent that month
+- Has no savings buffer, no insurance, no employer benefits
+Callout: "Ravi is one of 15 crore Indians with no financial protection against weather disruptions."
+
+---
+
+SLIDE 4 — OUR SOLUTION
+Heading: GigShield — Smart Parametric Insurance
+Content:
+- Weekly income protection insurance for gig workers
+- No paperwork. No subjective assessment. No delays.
+- When a qualifying weather event is detected in the worker's zone → claim is AUTO-APPROVED
+- Risk is scored by AI at enrollment → fair, zone-specific weekly premiums
+- Payouts delivered directly to UPI within 24 hours
+
+3-step flow graphic:
+Step 1: Worker registers + AI scores risk → premium assigned (₹15–₹40/week)
+Step 2: Disruption detected (rain, flood, heatwave) → claim auto-evaluated
+Step 3: Payout credited to UPI within T+1 business day. No forms needed.
+
+---
+
+SLIDE 5 — HOW PARAMETRIC INSURANCE WORKS
+Heading: What Is Parametric Insurance?
+Content:
+- Traditional insurance: Prove your loss → assessor visits → weeks of waiting
+- Parametric insurance: A pre-agreed trigger condition is met → payout is automatic
+- GigShield triggers:
+  * Rainfall > 50mm in 24 hours
+  * Temperature > 40°C (heatwave)
+  * Air Quality Index > 300 (Hazardous)
+  * Active flood OR cyclone alert in the worker's zone
+- Data comes from OpenWeatherMap API, refreshed every 30 minutes
+- No human bias. No delays. No paperwork.
+
+Callout: "Parametric = faster, fairer, fraud-resistant"
+
+---
+
+SLIDE 6 — THE AI ENGINE
+Heading: Intelligence Built Into Every Decision
+Content:
+Three AI models powering GigShield:
+
+Model 1 — Risk Scoring (XGBoost)
+- Computes a 0–100 risk score per worker per week
+- Uses 8 features: rainfall, temperature, AQI, flood index, platform type, income, work hours, seniority
+- Determines premium tier: LOW / MEDIUM / HIGH
+
+Model 2 — Fraud Detection (LightGBM)
+- Binary classifier: Legitimate Claim vs. Fraudulent Claim
+- Checks GPS zone match, claim frequency, weather confirmation, photo evidence
+- Precision target: >92% | Recall: >78%
+
+Model 3 — Anomaly Detection (Isolation Forest)
+- Unsupervised detection of novel fraud patterns not seen in training data
+- Flags sudden tier upgrades before storms, unusually high claim ratios vs peers
+
+Decision Gate:
+Fraud score < 0.3 + No anomaly flag → AUTO_APPROVE → UPI Payout
+Fraud score > 0.3 OR anomaly flag → MANUAL REVIEW (T+2 days)
+
+---
+
+SLIDE 7 — PREMIUM TIERS & PAYOUTS
+Heading: Affordable. Fair. Risk-Adjusted.
+Content:
+
+Table 1 — Premium Tiers:
+| Tier   | Weekly Premium | Max Payout per Event | Target Worker |
+| LOW    | ₹15/week       | ₹3,000               | Street vendors, domestic workers |
+| MEDIUM | ₹25/week       | ₹7,500               | Delivery riders (Swiggy/Zomato) |
+| HIGH   | ₹40/week       | ₹15,000              | Construction, cold chain logistics |
+
+Table 2 — Payouts by Disruption:
+| Disruption  | LOW Tier | MEDIUM Tier | HIGH Tier |
+| Heavy Rain  | ₹500     | ₹1,500      | ₹3,000    |
+| Heatwave    | ₹750     | ₹2,000      | ₹4,000    |
+| Flood       | ₹1,000   | ₹3,000      | ₹6,000    |
+| Poor AQI    | ₹500     | ₹1,000      | ₹2,000    |
+
+Policy terms: 7-day waiting period | Max 2 claims/month | Auto-renews weekly via UPI AutoPay
+
+---
+
+SLIDE 8 — PLATFORM FEATURES
+Heading: Built for Three Stakeholders
+Content:
+
+For Workers:
+- Register with phone OTP + Aadhaar KYC
+- View AI-computed risk score and premium
+- Buy weekly policy in one click
+- Submit claims with GPS + photo evidence
+- Track claim status in real-time (live SSE stream)
+- View full claim history and activity log
+
+For Admins (Insurers):
+- Live dashboard: enrolled workers, active policies, revenue, claim status
+- Claims table: approve, reject, or escalate with audit trail
+- Fraud detection heatmap and anomaly event log
+- Actuarial health monitor: live loss ratio, reserve status, sustainability alerts
+- Worker search and management panel
+- Demo panel: trigger a full claim pipeline for live presentations
+
+For Platform Partners (Swiggy, Zomato, etc.):
+- Partner dashboard with fleet analytics
+- Per-worker risk insights for platform optimization
+- API access for embedded insurance in partner apps
+
+---
+
+SLIDE 9 — TECHNOLOGY STACK
+Heading: Modern, Scalable, Production-Ready
+Content:
+
+Frontend: React 19 + Vite + TailwindCSS 4 | Hosted on Vercel CDN
+Backend: Node.js + Express.js | Hosted on Render
+Database: MongoDB Atlas (cloud-hosted, encrypted at rest)
+Auth: JWT + Twilio OTP + Aadhaar KYC (Sandbox.co.in)
+Payments: Razorpay (premium collection + instant UPI payouts)
+Weather: OpenWeatherMap API (live, refreshed every 30 minutes)
+AI Engine: XGBoost + LightGBM + Isolation Forest (Node.js simulation for MVP)
+DevOps: Docker + GitHub Actions CI/CD
+Security: Helmet.js + express-rate-limit (100 req/min/IP)
+
+Live Deployment:
+- Frontend: https://gig-shield-ten.vercel.app
+- Backend API: https://gigshield.onrender.com
+
+---
+
+SLIDE 10 — BUSINESS MODEL
+Heading: A Sustainable InsurTech Business
+Content:
+
+Revenue Streams:
+1. Weekly premiums from workers — ₹15–₹40/week per enrolled worker (primary)
+2. Platform SaaS fee — ₹2,000/month per partner platform (Swiggy, Zomato, etc.)
+3. Per-worker analytics — ₹5/worker/month sold to logistics and platform companies
+4. Future: White-label insurance product embedded inside partner apps
+
+Unit Economics (1,000 workers at MEDIUM tier):
+- Gross premium revenue: ₹1,00,000/month
+- Expected claim rate: 3 events/month
+- Projected payout: ₹4,500/month
+- Loss ratio: ~4.5% (IRDAI ceiling: 70%)
+- Net margin after opex: ~₹60,500/month
+- Breakeven: ~10,000 enrolled workers
+
+Regulatory:
+- Operates as InsurTech distribution partner under an IRDAI-registered micro-insurer
+- IRDAI Sandbox applicant (InsurTech Innovation License)
+- Compliant with IRDAI Micro-Insurance Regulations (2005)
+
+---
+
+SLIDE 11 — GO-TO-MARKET STRATEGY
+Heading: From Pilot to Pan-India
+Content:
+
+Phase 1 — Pilot (Months 1–6):
+- Cities: Mumbai, Hyderabad
+- Target: 500 workers via Swiggy fleet partnership
+- Revenue target: ₹75,000/month
+
+Phase 2 — Scale (Months 7–12):
+- Cities: + Chennai, Bangalore, Delhi
+- Target: 5,000 workers
+- Revenue target: ₹7,50,000/month
+
+Phase 3 — Expansion (Year 2):
+- All Tier-1 cities + Tier-2 entry
+- Target: 50,000 workers
+- Revenue target: ₹7.5 Crore/month
+
+Key GTM channels:
+- B2B partnerships with gig platforms (Swiggy, Zomato, Amazon)
+- Embedded insurance inside delivery partner apps
+- WhatsApp-first onboarding for low-tech workers
+- UPI AutoPay for zero-friction premium collection
+
+---
+
+SLIDE 12 — WHY NOW?
+Heading: The Market Timing Is Perfect
+Content:
+- India's gig economy is projected to reach 23.5 million workers by 2030 (NITI Aayog)
+- IRDAI's 2022 Bima Sugam initiative is actively pushing digital micro-insurance
+- UPI has 300M+ active users — making instant payouts trivially easy
+- Zomato, Swiggy, Zepto are actively seeking welfare schemes for their delivery fleets
+- Climate change is increasing the frequency and severity of urban weather disruptions
+- No direct competitor exists for parametric gig worker income insurance in India
+
+Callout: "GigShield sits at the intersection of India's two fastest-growing sectors: InsurTech and the Gig Economy."
+
+---
+
+SLIDE 13 — COMPETITIVE ADVANTAGE
+Heading: What Makes GigShield Different
+Content:
+
+Vs. Traditional Insurance:
+- No paperwork, no assessors, no 30-day waits — fully automated
+- Designed bottom-up for low-income gig workers, not salaried employees
+
+Vs. Other InsurTech Platforms (Acko, PolicyBazaar):
+- They sell health & vehicle; GigShield is the only income loss insurance for gig workers
+- Parametric model means zero claim disputes
+
+Vs. Platform Self-Insurance (Swiggy Assure):
+- GigShield is portable — follows the worker across platforms
+- Independent of any single gig platform
+
+Moats:
+- Proprietary 50+ zone PIN-level risk dataset for Indian cities
+- AI fraud detection tuned specifically to gig worker behavior patterns
+- Direct network effects: more workers → better ML data → better pricing
+
+---
+
+SLIDE 14 — TEAM
+Heading: Team Codex
+Content:
+- M Rohith — Team Lead & Full-Stack Architect
+- Srividya — Backend & AI Engine Development
+- Shruthi — Frontend & UX Design
+- Harsha — Data, Business Model & DevOps
+
+Built as a hackathon project demonstrating a production-grade InsurTech platform with real AI, real payments, real weather data, and a live deployed demo.
+
+---
+
+SLIDE 15 — CLOSING SLIDE
+Heading: Protecting the People Who Keep India Moving
+Content:
+GigShield — Parametric Income Protection for Gig Workers
+
+Live Demo: https://gig-shield-ten.vercel.app
+GitHub: [your repo link here]
+Contact: Team Codex
+
+Tagline: "No paperwork. No waiting. Just protection."
+
+---
+
+DESIGN NOTES FOR GAMMA:
+- Theme: Dark background (deep navy or charcoal), orange + teal accent colors
+- Font: Modern sans-serif (Inter or Outfit)
+- Use icons for feature lists (shield, lightning bolt, rupee sign, cloud, chart)
+- Slide 6 (AI Engine): use a 3-card layout, one per model
+- Slide 7 (Tiers): use a styled comparison table or card grid
+- Slide 8 (Features): use a 3-column layout (Worker | Admin | Partner)
+- Slide 11 (GTM): use a timeline or roadmap visual
+- Slide 13 (Competitive): use a comparison matrix or feature grid
+- Total slides: 15
+- Tone: Startup pitch, confident, data-driven, empathetic
